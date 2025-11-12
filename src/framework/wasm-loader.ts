@@ -41,7 +41,13 @@ export async function initWasmModule(): Promise<WasmModuleInstance> {
 
   try {
     // 调用 Emscripten 生成的工厂函数
-    wasmModuleInstance = await createWasmModule();
+    const module = await createWasmModule();
+
+    if (!module) {
+      throw new Error('WASM module factory returned null');
+    }
+
+    wasmModuleInstance = module as WasmModuleInstance;
 
     console.log('✅ WASM module loaded successfully');
 

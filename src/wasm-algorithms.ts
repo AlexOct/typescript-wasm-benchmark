@@ -535,8 +535,8 @@ export const wasmAlgorithms = {
    * Transform 3D vectors using SIMD optimization
    */
   transformVectorsSIMD(vectors: Float32Array, matrix: Float32Array): Float32Array {
-    const vectorsPtr = allocateFloatArrayEx(vectors, 0);
-    const matrixPtr = allocateFloatArrayEx(matrix, 1);
+    const vectorsPtr = allocateFloatArrayEx(vectors);
+    const matrixPtr = allocateFloatArrayEx(matrix);
     try {
       const module = getWasmModule();
       const count = vectors.length / 3;
