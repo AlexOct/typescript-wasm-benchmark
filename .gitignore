@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+public/*.js
+public/*.wasm
+
+# WASM compiled outputs (new location)
+src/wasm/array_processor.js
+src/wasm/array_processor.wasm
+
+# Old backup files
+*.old
+
+# Development
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+Thumbs.db
+nul

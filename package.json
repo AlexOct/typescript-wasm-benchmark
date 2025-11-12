@@ -1,0 +1,52 @@
+{
+  "name": "js-wasm-benchmark",
+  "version": "1.0.0",
+  "description": "A benchmark framework for comparing JavaScript and WebAssembly performance",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./framework": {
+      "import": "./dist/framework/index.js",
+      "types": "./dist/framework/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "FRAMEWORK.md"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm run build:wasm && tsc && vite build",
+    "build:wasm": "node build-wasm.js",
+    "build:lib": "tsc --declaration --emitDeclarationOnly && vite build --mode lib",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:wasm && npm run build:lib"
+  },
+  "keywords": [
+    "webassembly",
+    "wasm",
+    "benchmark",
+    "performance",
+    "simd",
+    "emscripten",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2"
+  },
+  "peerDependencies": {
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
+  }
+}

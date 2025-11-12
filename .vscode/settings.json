@@ -1,0 +1,54 @@
+{
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/**",
+    "E:/wasmEm/emsdk/upstream/emscripten/system/include"
+  ],
+  "C_Cpp.default.defines": [
+    "__EMSCRIPTEN__"
+  ],
+  "C_Cpp.default.compilerPath": "E:/wasmEm/emsdk/upstream/emscripten/emcc.bat",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.intelliSenseMode": "gcc-x64",
+  "files.associations": {
+    "*.json": "json",
+    "*.cpp": "cpp",
+    "emscripten.h": "c",
+    "__bit_reference": "cpp",
+    "__locale": "cpp",
+    "__verbose_abort": "cpp",
+    "bitset": "cpp",
+    "cctype": "cpp",
+    "clocale": "cpp",
+    "cmath": "cpp",
+    "cstdarg": "cpp",
+    "cstdint": "cpp",
+    "cstdio": "cpp",
+    "cstdlib": "cpp",
+    "cstring": "cpp",
+    "ctime": "cpp",
+    "cwchar": "cpp",
+    "cwctype": "cpp",
+    "execution": "cpp",
+    "memory": "cpp",
+    "initializer_list": "cpp",
+    "ios": "cpp",
+    "iosfwd": "cpp",
+    "limits": "cpp",
+    "locale": "cpp",
+    "mutex": "cpp",
+    "optional": "cpp",
+    "ratio": "cpp",
+    "stdexcept": "cpp",
+    "streambuf": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "typeinfo": "cpp",
+    "variant": "cpp",
+    "algorithm": "cpp"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  }
+}

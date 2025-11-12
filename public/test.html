@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WASM Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    #output {
+      white-space: pre-wrap;
+    }
+    .success { color: #00ff00; }
+    .error { color: #ff0000; }
+    .info { color: #00aaff; }
+  </style>
+</head>
+<body>
+  <h1>WASM Module Test</h1>
+  <div id="output"></div>
+
+  <script src="/array_processor.js"></script>
+  <script>
+    const output = document.getElementById('output');
+
+    function log(msg, type = 'info') {
+      const line = document.createElement('div');
+      line.className = type;
+      line.textContent = msg;
+      output.appendChild(line);
+    }
+
+    async function test() {
+      try {
+        log('Loading WASM module...', 'info');
+        const module = await createWasmModule();
+        log('✅ WASM module loaded', 'success');
+
+        // Get memory by loading WASM directly
+        log('Loading WASM binary for memory access...', 'info');
+        const wasmResponse = await fetch('/array_processor.wasm');
+        const wasmBuffer = await wasmResponse.arrayBuffer();
+        const wasmBinary = await WebAssembly.instantiate(wasmBuffer, {
+          a: {
+            a: () => { throw new Error('abort called'); },
+            b: () => false
+          }
+        });
+
+        const wasmMemory = wasmBinary.instance.exports.c;
+        log('✅ WASM memory accessed', 'success');
+
+        // Test memory allocation
+        const testSize = 10;
+        const ptr = module._malloc(testSize * 4);
+        if (!ptr) throw new Error('malloc failed');
+        log('✅ Memory allocation works', 'success');
+
+        // Create test data
+        const HEAPU32 = new Uint32Array(wasmMemory.buffer);
+        const offset = ptr / 4;
+        const testData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        HEAPU32.set(testData, offset);
+        log('✅ Memory write works', 'success');
+
+        // Test sumArray
+        const sum = module.ccall('sumArray', 'number', ['number', 'number'], [ptr, testSize]);
+        const expectedSum = testData.reduce((a, b) => a + b, 0);
+        if (sum == expectedSum) {
+          log(`✅ sumArray: ${sum} == ${expectedSum}`, 'success');
+        } else {
+          throw new Error(`sumArray failed: ${sum} != ${expectedSum}`);
+        }
+
+        // Test findMax
+        const max = module.ccall('findMax', 'number', ['number', 'number'], [ptr, testSize]);
+        const expectedMax = Math.max(...testData);
+        if (max === expectedMax) {
+          log(`✅ findMax: ${max} === ${expectedMax}`, 'success');
+        } else {
+          throw new Error(`findMax failed: ${max} !== ${expectedMax}`);
+        }
+
+        // Test findMin
+        const min = module.ccall('findMin', 'number', ['number', 'number'], [ptr, testSize]);
+        const expectedMin = Math.min(...testData);
+        if (min === expectedMin) {
+          log(`✅ findMin: ${min} === ${expectedMin}`, 'success');
+        } else {
+          throw new Error(`findMin failed: ${min} !== ${expectedMin}`);
+        }
+
+        // Free memory
+        module._free(ptr);
+        log('✅ Memory deallocation works', 'success');
+
+        log('\n🎉 All tests passed!', 'success');
+        log('\nYou can now test the main application at http://localhost:5176/', 'info');
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+
+    test();
+  </script>
+</body>
+</html>

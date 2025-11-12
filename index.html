@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TypeScript vs WebAssembly 性能对比</title>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1>⚡ TypeScript vs WebAssembly 性能对比</h1>
+        <p class="subtitle">对比 TypeScript 和 WebAssembly (C++) 在处理大型 Uint32Array 数据时的性能差异</p>
+      </header>
+
+      <main class="main">
+        <div class="controls-card">
+          <h2>🎛️ 测试配置</h2>
+
+          <div class="control-group">
+            <label for="arraySize">数组大小</label>
+            <select id="arraySize">
+              <option value="100000">100,000 元素</option>
+              <option value="500000" selected>500,000 元素</option>
+              <option value="1000000">1,000,000 元素</option>
+              <option value="5000000">5,000,000 元素</option>
+              <option value="10000000">10,000,000 元素</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="iterations">迭代次数</label>
+            <select id="iterations">
+              <option value="3">3 次</option>
+              <option value="5" selected>5 次</option>
+              <option value="10">10 次</option>
+            </select>
+          </div>
+
+          <button id="runButton" class="run-button" disabled>
+            🚀 开始性能测试
+          </button>
+
+          <div id="status" class="status loading">正在初始化...</div>
+        </div>
+
+        <div id="progress" class="progress-container" style="display: none;"></div>
+
+        <div id="results" class="results-container"></div>
+      </main>
+
+      <footer class="footer">
+        <p>使用 <strong>Vite</strong> + <strong>TypeScript</strong> + <strong>Emscripten</strong> 构建</p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
