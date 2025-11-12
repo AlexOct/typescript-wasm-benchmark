@@ -8,7 +8,8 @@
       "Bash(emcc:*)",
       "Bash(pnpm run dev:*)",
       "Bash(node build-wasm.js:*)",
-      "Bash(e:/code/privCode/js-vs-wasm/src/wasm-algorithms.ts)"
+      "Bash(e:/code/privCode/js-vs-wasm/src/wasm-algorithms.ts)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
