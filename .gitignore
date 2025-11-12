@@ -20,11 +20,10 @@ src/wasm/array_processor.wasm
 npm-debug.log*
 pnpm-debug.log*
 
-# IDE
-.vscode/*
-!.vscode/c_cpp_properties.json
-!.vscode/settings.json
+# IDE - exclude all local settings
+.vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
