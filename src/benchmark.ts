@@ -8,7 +8,6 @@ import { wasmAlgorithms } from './wasm-algorithms';
 
 export interface BenchmarkResult {
   testName: string;
-  testNameChinese: string;
   tsTime: number;
   wasmTime: number;
   tsTimes: number[];
@@ -90,7 +89,6 @@ export function formatTime(ms: number): string {
  */
 export async function runBenchmark(
   testName: string,
-  testNameChinese: string,
   tsFunc: () => any,
   wasmFunc: () => any,
   config: TestConfig
@@ -152,7 +150,6 @@ export async function runBenchmark(
 
   return {
     testName,
-    testNameChinese,
     tsTime: tsAvg,
     wasmTime: wasmAvg,
     tsTimes,
@@ -175,7 +172,6 @@ export async function runBenchmark(
  */
 export interface BenchmarkTest {
   name: string;
-  nameChinese: string;
   prepare: (size: number) => any;
   tsFunc: (data: any) => any;
   wasmFunc: (data: any) => any;
@@ -184,70 +180,60 @@ export interface BenchmarkTest {
 export const benchmarkTests: BenchmarkTest[] = [
   {
     name: 'Sum Array',
-    nameChinese: '数组求和',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.sumArray(arr),
     wasmFunc: (arr) => wasmAlgorithms.sumArray(arr),
   },
   {
     name: 'Find Max',
-    nameChinese: '查找最大值',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.findMax(arr),
     wasmFunc: (arr) => wasmAlgorithms.findMax(arr),
   },
   {
     name: 'Find Min',
-    nameChinese: '查找最小值',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.findMin(arr),
     wasmFunc: (arr) => wasmAlgorithms.findMin(arr),
   },
   {
     name: 'Calculate Average',
-    nameChinese: '计算平均值',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.calculateAverage(arr),
     wasmFunc: (arr) => wasmAlgorithms.calculateAverage(arr),
   },
   {
     name: 'Multiply Array',
-    nameChinese: '数组倍增',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.multiplyArray(arr, 2),
     wasmFunc: (arr) => wasmAlgorithms.multiplyArray(arr, 2),
   },
   {
     name: 'Count Greater Than',
-    nameChinese: '条件计数',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.countGreaterThan(arr, 500000),
     wasmFunc: (arr) => wasmAlgorithms.countGreaterThan(arr, 500000),
   },
   {
     name: 'Quick Sort',
-    nameChinese: '快速排序',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.quickSort(arr),
     wasmFunc: (arr) => wasmAlgorithms.quickSort(arr),
   },
   {
     name: 'Reverse Array',
-    nameChinese: '数组反转',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.reverseArray(arr),
     wasmFunc: (arr) => wasmAlgorithms.reverseArray(arr),
   },
   {
     name: 'Calculate Variance',
-    nameChinese: '计算方差',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.calculateVariance(arr),
     wasmFunc: (arr) => wasmAlgorithms.calculateVariance(arr),
   },
   {
     name: 'Binary Search',
-    nameChinese: '二分查找',
     prepare: (size) => {
       const arr = generateSortedArray(size);
       return { arr, target: arr[Math.floor(arr.length / 2)] };
@@ -260,49 +246,42 @@ export const benchmarkTests: BenchmarkTest[] = [
 
   {
     name: 'Sum Array (SIMD)',
-    nameChinese: '数组求和 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.sumArray(arr),
     wasmFunc: (arr) => wasmAlgorithms.sumArraySIMD(arr),
   },
   {
     name: 'Find Max (SIMD)',
-    nameChinese: '查找最大值 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.findMax(arr),
     wasmFunc: (arr) => wasmAlgorithms.findMaxSIMD(arr),
   },
   {
     name: 'Find Min (SIMD)',
-    nameChinese: '查找最小值 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.findMin(arr),
     wasmFunc: (arr) => wasmAlgorithms.findMinSIMD(arr),
   },
   {
     name: 'Calculate Average (SIMD)',
-    nameChinese: '计算平均值 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.calculateAverage(arr),
     wasmFunc: (arr) => wasmAlgorithms.calculateAverageSIMD(arr),
   },
   {
     name: 'Multiply Array (SIMD)',
-    nameChinese: '数组倍增 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.multiplyArray(arr, 2),
     wasmFunc: (arr) => wasmAlgorithms.multiplyArraySIMD(arr, 2),
   },
   {
     name: 'Add To Array (SIMD)',
-    nameChinese: '数组加值 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.addToArray(arr, 100),
     wasmFunc: (arr) => wasmAlgorithms.addToArraySIMD(arr, 100),
   },
   {
     name: 'Count Greater Than (SIMD)',
-    nameChinese: '条件计数 (SIMD)',
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.countGreaterThan(arr, 500000),
     wasmFunc: (arr) => wasmAlgorithms.countGreaterThanSIMD(arr, 500000),
@@ -312,7 +291,6 @@ export const benchmarkTests: BenchmarkTest[] = [
 
   {
     name: 'Matrix Transform',
-    nameChinese: '矩阵变换',
     prepare: (size) => {
       const vectors = generateRandomVectors(size);
       const matrix = tsAlgorithms.createTransformMatrix(2, 1.5, 1, 45, 10, 20, 5);
@@ -329,7 +307,6 @@ export const benchmarkTests: BenchmarkTest[] = [
   },
   {
     name: 'Matrix Transform (SIMD)',
-    nameChinese: '矩阵变换 (SIMD)',
     prepare: (size) => {
       const vectors = generateRandomVectors(size);
       const matrix = tsAlgorithms.createTransformMatrix(2, 1.5, 1, 45, 10, 20, 5);
@@ -366,7 +343,6 @@ export async function runAllBenchmarks(
 
     const result = await runBenchmark(
       test.name,
-      test.nameChinese,
       () => test.tsFunc(data),
       () => test.wasmFunc(data),
       config

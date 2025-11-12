@@ -1,6 +1,4 @@
 /**
- * WASM Algorithm Wrappers
- * WASM 算法包装器 - 提供所有 WASM 函数的 TypeScript 接口
  */
 
 import { getWasmModuleInstance } from './framework/wasm-loader';
@@ -43,8 +41,6 @@ export function allocateArrayEx(arr: Uint32Array): number {
 }
 
 /**
- * Free allocated memory in WASM
- * @param ptr Pointer to free
  */
 export function freeArray(ptr: number): void {
   const module = getWasmModule();
@@ -53,10 +49,6 @@ export function freeArray(ptr: number): void {
 
 
 /**
- * Copy data from WASM memory back to TypeScript array
- * @param ptr Pointer to WASM memory
- * @param length Array length
- * @returns Uint32Array with copied data
  */
 export function readArray(ptr: number, length: number): Uint32Array {
   const module = getWasmModule();
@@ -81,9 +73,6 @@ export function readArrayEx(ptr: number, length: number): Uint32Array {
   return result;
 }
 /**
- * Allocate memory for a Float32Array in WASM memory
- * @param arr TypeScript Float32Array
- * @returns Pointer to allocated memory in WASM
  */
 export function allocateFloatArray(arr: Float32Array): number {
   const module = getWasmModule();
@@ -119,10 +108,6 @@ export function allocateFloatArrayEx(arr: Float32Array): number {
 
 
 /**
- * Copy float data from WASM memory back to TypeScript array
- * @param ptr Pointer to WASM memory
- * @param length Array length
- * @returns Float32Array with copied data
  */
 export function readFloatArray(ptr: number, length: number): Float32Array {
   const module = getWasmModule();
@@ -144,12 +129,10 @@ export function readFloatArrayEx(ptr: number, length: number): Float32Array {
   return result;
 }
 /**
- * WASM Algorithm Wrappers
  */
 
 export const wasmAlgorithms = {
   /**
-   * Sum all elements in array
    */
   sumArray(arr: Uint32Array): bigint {
     const ptr = allocateArrayEx(arr);
@@ -168,7 +151,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Find maximum element
    */
   findMax(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -186,7 +168,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Find minimum element
    */
   findMin(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -204,7 +185,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Calculate average
    */
   calculateAverage(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -222,7 +202,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Multiply each element by factor (in-place)
    */
   multiplyArray(arr: Uint32Array, factor: number): Uint32Array {
     const ptr = allocateArrayEx(arr);
@@ -241,7 +220,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Count elements greater than threshold
    */
   countGreaterThan(arr: Uint32Array, threshold: number): number {
     const ptr = allocateArrayEx(arr);
@@ -259,7 +237,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Quick sort (in-place)
    */
   quickSort(arr: Uint32Array): Uint32Array {
     const ptr = allocateArrayEx(arr);
@@ -278,7 +255,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Reverse array (in-place)
    */
   reverseArray(arr: Uint32Array): Uint32Array {
     const ptr = allocateArrayEx(arr);
@@ -297,7 +273,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Calculate variance
    */
   calculateVariance(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -315,7 +290,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Binary search (assumes sorted array)
    */
   binarySearch(arr: Uint32Array, target: number): number {
     const ptr = allocateArrayEx(arr);
@@ -333,7 +307,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Add value to each element (in-place)
    */
   addToArray(arr: Uint32Array, value: number): Uint32Array {
     const ptr = allocateArrayEx(arr);
@@ -352,7 +325,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Count unique values
    */
   countUnique(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -372,7 +344,6 @@ export const wasmAlgorithms = {
   // ========== SIMD OPTIMIZED VERSIONS ==========
 
   /**
-   * Sum array using SIMD (4 elements at once)
    */
   sumArraySIMD(arr: Uint32Array): bigint {
     const ptr = allocateArrayEx(arr);
@@ -391,7 +362,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Find maximum using SIMD
    */
   findMaxSIMD(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -409,7 +379,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Find minimum using SIMD
    */
   findMinSIMD(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -427,7 +396,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Calculate average using SIMD
    */
   calculateAverageSIMD(arr: Uint32Array): number {
     const ptr = allocateArrayEx(arr);
@@ -445,7 +413,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Multiply each element using SIMD
    */
   multiplyArraySIMD(arr: Uint32Array, factor: number): Uint32Array {
     const ptr = allocateArrayEx(arr);
@@ -464,7 +431,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Add value to each element using SIMD
    */
   addToArraySIMD(arr: Uint32Array, value: number): Uint32Array {
     const ptr = allocateArrayEx(arr);
@@ -483,7 +449,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Count elements greater than threshold using SIMD
    */
   countGreaterThanSIMD(arr: Uint32Array, threshold: number): number {
     const ptr = allocateArrayEx(arr);
@@ -503,7 +468,6 @@ export const wasmAlgorithms = {
   // ========== MATRIX TRANSFORMATION ==========
 
   /**
-   * Transform 3D vectors using transformation matrix
    */
   transformVectors(vectors: Float32Array, matrix: Float32Array): Float32Array {
     const vectorsPtr = allocateFloatArrayEx(vectors);
@@ -532,7 +496,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Transform 3D vectors using SIMD optimization
    */
   transformVectorsSIMD(vectors: Float32Array, matrix: Float32Array): Float32Array {
     const vectorsPtr = allocateFloatArrayEx(vectors);
@@ -554,7 +517,6 @@ export const wasmAlgorithms = {
   },
 
   /**
-   * Create transformation matrix in WASM
    */
   createTransformMatrix(
     scaleX: number, scaleY: number, scaleZ: number,

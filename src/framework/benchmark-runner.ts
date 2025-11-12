@@ -1,6 +1,6 @@
 /**
  * JS vs WASM Benchmark Framework - Benchmark Runner
- * Benchmark 执行引擎
+ * Benchmark execution engine
  */
 
 import type {
@@ -11,7 +11,7 @@ import type {
 } from './types';
 
 /**
- * 计算中位数
+ * Calculate median
  */
 function calculateMedian(times: number[]): number {
   const sorted = [...times].sort((a, b) => a - b);
@@ -22,7 +22,7 @@ function calculateMedian(times: number[]): number {
 }
 
 /**
- * 格式化时间
+ * Format time
  */
 export function formatTime(ms: number): string {
   if (ms < 1) {
@@ -35,7 +35,7 @@ export function formatTime(ms: number): string {
 }
 
 /**
- * 运行单个 Benchmark 测试
+ * Run single benchmark test
  */
 export async function runBenchmark(
   test: BenchmarkTest,
@@ -44,7 +44,7 @@ export async function runBenchmark(
   const tsTimes: number[] = [];
   const wasmTimes: number[] = [];
 
-  // 准备数据
+  // Prepare data
   const data = test.prepare(config);
 
   // Warmup phase
@@ -127,7 +127,7 @@ export async function runBenchmark(
 }
 
 /**
- * 运行多个 Benchmark 测试
+ * Run multiple benchmark tests
  */
 export async function runBenchmarks(
   tests: BenchmarkTest[],
@@ -153,7 +153,7 @@ export async function runBenchmarks(
 }
 
 /**
- * 生成测试报告摘要
+ * Generate test report summary
  */
 export interface BenchmarkSummary {
   totalTests: number;

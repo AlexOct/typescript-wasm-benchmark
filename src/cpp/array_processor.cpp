@@ -7,7 +7,7 @@ extern "C"
 {
 
     /**
-     * 数组求和 - Sum all elements in the array
+     * Sum all elements in the array
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Sum of all elements
@@ -24,7 +24,7 @@ extern "C"
     }
 
     /**
-     * 查找最大值 - Find maximum element
+     * Find maximum element
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Maximum value
@@ -47,7 +47,7 @@ extern "C"
     }
 
     /**
-     * 查找最小值 - Find minimum element
+     * Find minimum element
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Minimum value
@@ -69,7 +69,7 @@ extern "C"
     }
 
     /**
-     * 计算平均值 - Calculate average
+     * Calculate average
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Average value
@@ -84,7 +84,7 @@ extern "C"
     }
 
     /**
-     * 数组倍增 - Multiply each element by a factor (in-place)
+     * Multiply each element by a factor (in-place)
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @param factor Multiplication factor
@@ -99,7 +99,7 @@ extern "C"
     }
 
     /**
-     * 条件计数 - Count elements greater than threshold
+     * Count elements greater than threshold
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @param threshold Threshold value
@@ -140,7 +140,7 @@ extern "C"
     }
 
     /**
-     * 快速排序 - Quick sort (in-place) - Iterative version to avoid stack overflow
+     * Quick sort (in-place) - Iterative version to avoid stack overflow
      * @param arr Pointer to uint32_t array
      * @param length Array length
      */
@@ -187,7 +187,7 @@ extern "C"
     }
 
     /**
-     * 数组反转 - Reverse array (in-place)
+     * Reverse array (in-place)
      * @param arr Pointer to uint32_t array
      * @param length Array length
      */
@@ -201,7 +201,7 @@ extern "C"
     }
 
     /**
-     * 计算方差 - Calculate variance
+     * Calculate variance
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Variance
@@ -225,7 +225,7 @@ extern "C"
     }
 
     /**
-     * 二分查找 - Binary search (assumes sorted array)
+     * Binary search (assumes sorted array)
      * @param arr Pointer to sorted uint32_t array
      * @param length Array length
      * @param target Target value to find
@@ -259,7 +259,7 @@ extern "C"
     }
 
     /**
-     * 数组元素相加 - Add value to each element (in-place)
+     * Add value to each element (in-place)
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @param value Value to add
@@ -274,7 +274,7 @@ extern "C"
     }
 
     /**
-     * 计算唯一值数量 - Count unique values
+     * Count unique values
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Count of unique values
@@ -310,7 +310,7 @@ extern "C"
     // ========== SIMD OPTIMIZED VERSIONS ==========
 
     /**
-     * SIMD 数组求和 - Sum all elements using SIMD (processes 4 elements at once)
+     * SIMD Sum all elements using SIMD (processes 4 elements at once)
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Sum of all elements
@@ -348,7 +348,7 @@ extern "C"
     }
 
     /**
-     * SIMD 查找最大值 - Find maximum using SIMD
+     * SIMD Find maximum using SIMD
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Maximum value
@@ -397,7 +397,7 @@ extern "C"
     }
 
     /**
-     * SIMD 查找最小值 - Find minimum using SIMD
+     * SIMD Find minimum using SIMD
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Minimum value
@@ -446,7 +446,7 @@ extern "C"
     }
 
     /**
-     * SIMD 数组倍增 - Multiply using SIMD
+     * SIMD Multiply using SIMD
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @param factor Multiplication factor
@@ -475,7 +475,7 @@ extern "C"
     }
 
     /**
-     * SIMD 数组元素相加 - Add value using SIMD
+     * SIMD Add value using SIMD
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @param value Value to add
@@ -504,7 +504,7 @@ extern "C"
     }
 
     /**
-     * SIMD 计算平均值 - Calculate average using SIMD sum
+     * SIMD Calculate average using SIMD sum
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @return Average value
@@ -519,7 +519,7 @@ extern "C"
     }
 
     /**
-     * SIMD 条件计数 - Count elements greater than threshold using SIMD
+     * SIMD Count elements greater than threshold using SIMD
      * @param arr Pointer to uint32_t array
      * @param length Array length
      * @param threshold Threshold value
@@ -563,9 +563,9 @@ extern "C"
     }
 
     /**
-     * 3D向量矩阵变换 - Apply 4x4 transformation matrix to 3D vectors
-     * 输入数组格式: [x1, y1, z1, x2, y2, z2, ...]
-     * 矩阵按列优先顺序: [m00, m10, m20, m30, m01, m11, ...]
+     * Apply 4x4 transformation matrix to 3D vectors
+     * Input format: [x1, y1, z1, x2, y2, z2, ...]
+     * Matrix in column-major order
      * @param vectors Input array of 3D vectors (x,y,z repeated)
      * @param matrix 4x4 transformation matrix (16 elements)
      * @param count Number of vectors (length / 3)
@@ -587,7 +587,7 @@ extern "C"
     }
 
     /**
-     * SIMD 3D向量矩阵变换 - SIMD optimized transformation
+     * SIMD SIMD optimized transformation
      * Process 4 vectors at once using SIMD
      */
     EMSCRIPTEN_KEEPALIVE
@@ -700,7 +700,7 @@ extern "C"
     }
 
     /**
-     * 创建变换矩阵 - Create transformation matrix (scale, rotate, translate)
+     * Create transformation matrix (scale, rotate, translate)
      * @param matrix Output 4x4 matrix (16 floats)
      * @param scale_x Scale factor X
      * @param scale_y Scale factor Y

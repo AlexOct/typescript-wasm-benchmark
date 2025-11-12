@@ -201,7 +201,7 @@ function createResultCard(result: BenchmarkResult): HTMLDivElement {
 
   card.innerHTML = `
     <div class="result-header">
-      <h3>${result.testNameChinese} (${result.testName})</h3>
+      <h3>${result.testName}</h3>
       <span class="winner-badge ${winnerClass}">${speedupText}</span>
     </div>
     <div class="result-body">

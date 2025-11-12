@@ -1,20 +1,20 @@
 /**
  * JS vs WASM Benchmark Framework - Test Registry
- * 测试注册中心
+ * Test registry
  */
 
 import type { BenchmarkTest, TestModule } from './types';
 
 /**
- * 测试注册器
- * 负责收集和管理所有的测试用例
+ * Test registry class
+ * Responsible for collecting and managing all test cases
  */
 class TestRegistry {
   private tests: BenchmarkTest[] = [];
   private categories = new Set<string>();
 
   /**
-   * 注册单个测试
+   * Register a single test
    */
   registerTest(test: BenchmarkTest): void {
     this.tests.push(test);
@@ -22,7 +22,7 @@ class TestRegistry {
   }
 
   /**
-   * 注册测试模块
+   * Register test module
    */
   registerModule(module: TestModule): void {
     module.tests.forEach(test => {
@@ -34,35 +34,35 @@ class TestRegistry {
   }
 
   /**
-   * 批量注册测试模块
+   * 批量Register test module
    */
   registerModules(modules: TestModule[]): void {
     modules.forEach(module => this.registerModule(module));
   }
 
   /**
-   * 获取所有测试
+   * Get all tests
    */
   getAllTests(): BenchmarkTest[] {
     return [...this.tests];
   }
 
   /**
-   * 按分类获取测试
+   * Get tests by category
    */
   getTestsByCategory(category: string): BenchmarkTest[] {
     return this.tests.filter(test => test.category === category);
   }
 
   /**
-   * 获取所有分类
+   * Get all categories
    */
   getCategories(): string[] {
     return Array.from(this.categories);
   }
 
   /**
-   * 清空所有测试
+   * Clear all tests
    */
   clear(): void {
     this.tests = [];
@@ -70,5 +70,5 @@ class TestRegistry {
   }
 }
 
-// 导出单例
+// Export singleton
 export const testRegistry = new TestRegistry();

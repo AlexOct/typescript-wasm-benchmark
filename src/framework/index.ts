@@ -1,9 +1,9 @@
 /**
  * JS vs WASM Benchmark Framework
- * 主入口文件 - 可以作为 npm 包导出
+ * Main entry point - can be exported as npm package
  */
 
-// 导出类型
+// Export types
 export type {
   BenchmarkTest,
   BenchmarkResult,
@@ -13,10 +13,10 @@ export type {
   DataType,
 } from './types';
 
-// 导出测试注册
+// Export test registry
 export { testRegistry } from './test-registry';
 
-// 导出 WASM 加载器
+// Export WASM loader
 export {
   initWasmModule,
   getWasmModuleInstance,
@@ -24,7 +24,7 @@ export {
   type WasmModuleInstance,
 } from './wasm-loader';
 
-// 导出 WASM 桥接
+// Export WASM bridge
 export {
   getWasmModule,
   allocateUint32Array,
@@ -36,7 +36,7 @@ export {
   createAdvancedWasmWrapper,
 } from './wasm-bridge';
 
-// 导出 Benchmark 运行器
+// Export benchmark runner
 export {
   runBenchmark,
   runBenchmarks,

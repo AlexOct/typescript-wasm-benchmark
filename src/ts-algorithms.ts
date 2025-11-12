@@ -4,7 +4,7 @@
  */
 
 /**
- * 数组求和 - Sum all elements in the array
+ * Sum all elements in the array
  */
 export function sumArray(arr: Uint32Array): bigint {
   let sum = 0n;
@@ -15,7 +15,7 @@ export function sumArray(arr: Uint32Array): bigint {
 }
 
 /**
- * 查找最大值 - Find maximum element
+ * Find maximum element
  */
 export function findMax(arr: Uint32Array): number {
   if (arr.length === 0) return 0;
@@ -29,7 +29,7 @@ export function findMax(arr: Uint32Array): number {
 }
 
 /**
- * 查找最小值 - Find minimum element
+ * Find minimum element
  */
 export function findMin(arr: Uint32Array): number {
   if (arr.length === 0) return 0;
@@ -43,7 +43,7 @@ export function findMin(arr: Uint32Array): number {
 }
 
 /**
- * 计算平均值 - Calculate average
+ * Calculate average
  */
 export function calculateAverage(arr: Uint32Array): number {
   if (arr.length === 0) return 0;
@@ -52,7 +52,7 @@ export function calculateAverage(arr: Uint32Array): number {
 }
 
 /**
- * 数组倍增 - Multiply each element by a factor (in-place)
+ * Multiply each element by a factor (in-place)
  */
 export function multiplyArray(arr: Uint32Array, factor: number): Uint32Array {
   const result = new Uint32Array(arr);
@@ -63,7 +63,7 @@ export function multiplyArray(arr: Uint32Array, factor: number): Uint32Array {
 }
 
 /**
- * 条件计数 - Count elements greater than threshold
+ * Count elements greater than threshold
  */
 export function countGreaterThan(arr: Uint32Array, threshold: number): number {
   let count = 0;
@@ -101,7 +101,7 @@ function partition(arr: Uint32Array, low: number, high: number): number {
 }
 
 /**
- * 快速排序 - Quick sort (in-place) - Iterative version to avoid stack overflow
+ * Quick sort (in-place) - Iterative version to avoid stack overflow
  */
 export function quickSort(arr: Uint32Array): Uint32Array {
   if (arr.length <= 1) return new Uint32Array(arr);
@@ -140,7 +140,7 @@ export function quickSort(arr: Uint32Array): Uint32Array {
 }
 
 /**
- * 数组反转 - Reverse array (in-place)
+ * Reverse array (in-place)
  */
 export function reverseArray(arr: Uint32Array): Uint32Array {
   const result = new Uint32Array(arr);
@@ -153,7 +153,7 @@ export function reverseArray(arr: Uint32Array): Uint32Array {
 }
 
 /**
- * 计算方差 - Calculate variance
+ * Calculate variance
  */
 export function calculateVariance(arr: Uint32Array): number {
   if (arr.length === 0) return 0;
@@ -170,7 +170,7 @@ export function calculateVariance(arr: Uint32Array): number {
 }
 
 /**
- * 二分查找 - Binary search (assumes sorted array)
+ * Binary search (assumes sorted array)
  */
 export function binarySearch(arr: Uint32Array, target: number): number {
   let left = 0;
@@ -192,7 +192,7 @@ export function binarySearch(arr: Uint32Array, target: number): number {
 }
 
 /**
- * 数组元素相加 - Add value to each element (in-place)
+ * Add value to each element (in-place)
  */
 export function addToArray(arr: Uint32Array, value: number): Uint32Array {
   const result = new Uint32Array(arr);
@@ -203,7 +203,7 @@ export function addToArray(arr: Uint32Array, value: number): Uint32Array {
 }
 
 /**
- * 计算唯一值数量 - Count unique values
+ * Count unique values
  */
 export function countUnique(arr: Uint32Array): number {
   if (arr.length === 0) return 0;
@@ -222,9 +222,9 @@ export function countUnique(arr: Uint32Array): number {
 }
 
 /**
- * 3D向量矩阵变换 - Apply 4x4 transformation matrix to 3D vectors
- * 输入数组格式: [x1, y1, z1, x2, y2, z2, ...]
- * 矩阵按列优先顺序
+ * Apply 4x4 transformation matrix to 3D vectors
+ * Input format: [x1, y1, z1, x2, y2, z2, ...]
+ * Matrix in column-major order
  */
 export function transformVectors(vectors: Float32Array, matrix: Float32Array): Float32Array {
   const result = new Float32Array(vectors);
@@ -245,7 +245,7 @@ export function transformVectors(vectors: Float32Array, matrix: Float32Array): F
 }
 
 /**
- * 创建变换矩阵 - Create transformation matrix (scale, rotate, translate)
+ * Create transformation matrix (scale, rotate, translate)
  */
 export function createTransformMatrix(
   scaleX: number, scaleY: number, scaleZ: number,

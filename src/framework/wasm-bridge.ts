@@ -1,31 +1,31 @@
 /**
  * JS vs WASM Benchmark Framework - WASM Bridge
- * WASM 桥接层 - 简化 WASM 函数调用
+ * WASM bridge layer - simplify WASM function calls
  */
 
 import type { DataType } from './types';
 import { getWasmModuleInstance, type WasmModuleInstance } from './wasm-loader';
 
 /**
- * 获取 WASM 模块实例
+ * Get WASM module instance
  */
 export function getWasmModule(): WasmModuleInstance {
   return getWasmModuleInstance();
 }
 
 /**
- * 内存池 - 避免频繁 malloc/free
+ * Memory pool - avoid frequent malloc/free
  */
 const memoryPools: Map<string, Float32Array | Uint32Array> = new Map();
 
 /**
- * 分配 Uint32Array 内存（带缓存）
+ * Allocate Uint32Array memory (with cache)
  */
 export function allocateUint32Array(arr: Uint32Array, poolId: string = 'default'): number {
   const module = getWasmModule();
   const byteSize = arr.length * 4;
 
-  // 检查内存池
+  // Check memory pool
   let heap = memoryPools.get(poolId) as Uint32Array | undefined;
   if (!heap || heap.byteLength < byteSize) {
     const ptr = module._malloc(byteSize);
@@ -38,13 +38,13 @@ export function allocateUint32Array(arr: Uint32Array, poolId: string = 'default'
 }
 
 /**
- * 分配 Float32Array 内存（带缓存）
+ * Allocate Float32Array memory (with cache)
  */
 export function allocateFloat32Array(arr: Float32Array, poolId: string = 'default'): number {
   const module = getWasmModule();
   const byteSize = arr.length * 4;
 
-  // 检查内存池
+  // Check memory pool
   let heap = memoryPools.get(poolId) as Float32Array | undefined;
   if (!heap || heap.byteLength < byteSize) {
     const ptr = module._malloc(byteSize);
@@ -57,7 +57,7 @@ export function allocateFloat32Array(arr: Float32Array, poolId: string = 'defaul
 }
 
 /**
- * 读取 Uint32Array
+ * Read Uint32Array
  */
 export function readUint32Array(ptr: number, length: number): Uint32Array {
   const module = getWasmModule();
@@ -66,7 +66,7 @@ export function readUint32Array(ptr: number, length: number): Uint32Array {
 }
 
 /**
- * 读取 Float32Array
+ * Read Float32Array
  */
 export function readFloat32Array(ptr: number, length: number): Float32Array {
   const module = getWasmModule();
@@ -75,7 +75,7 @@ export function readFloat32Array(ptr: number, length: number): Float32Array {
 }
 
 /**
- * 清理内存池
+ * Clear memory pool
  */
 export function clearMemoryPools(): void {
   const module = getWasmModule();
@@ -86,8 +86,8 @@ export function clearMemoryPools(): void {
 }
 
 /**
- * WASM 函数包装器生成器
- * 自动处理内存分配和数据转换
+ * WASM function wrapper generator
+ * Automatically handle memory allocation and data conversion
  */
 export function createWasmWrapper<TInput, TOutput>(
   funcName: string,
@@ -100,7 +100,7 @@ export function createWasmWrapper<TInput, TOutput>(
     let ptr: number;
     let length: number = 0;
 
-    // 处理输入
+    // Handle input
     if (inputType === 'uint32array' && input instanceof Uint32Array) {
       length = input.length;
       ptr = allocateUint32Array(input, `${funcName}_input`);
@@ -111,7 +111,7 @@ export function createWasmWrapper<TInput, TOutput>(
       throw new Error(`Unsupported input type: ${inputType}`);
     }
 
-    // 调用 WASM 函数
+    // Call WASM function
     let result: any;
     try {
       if (outputType === 'void') {
@@ -143,7 +143,7 @@ export function createWasmWrapper<TInput, TOutput>(
 }
 
 /**
- * 高级包装器：支持多个参数
+ * Advanced wrapper: support multiple parameters
  */
 export interface WasmFuncConfig {
   funcName: string;
@@ -163,7 +163,7 @@ export function createAdvancedWasmWrapper(config: WasmFuncConfig): (...args: any
     const argValues: any[] = [];
 
     try {
-      // 处理所有参数
+      // Process all parameters
       args.forEach((arg, index) => {
         const argConfig = config.args[index];
 
@@ -183,11 +183,11 @@ export function createAdvancedWasmWrapper(config: WasmFuncConfig): (...args: any
         }
       });
 
-      // 调用函数
+      // Call function
       const returnTypeStr = config.returnType === 'void' ? null : 'number';
       const result = module.ccall(config.funcName, returnTypeStr, argTypes, argValues);
 
-      // 处理返回值
+      // Handle return value
       if (config.returnType === 'bigint' && typeof result === 'number') {
         return BigInt(result);
       }
