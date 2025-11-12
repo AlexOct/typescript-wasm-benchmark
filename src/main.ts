@@ -30,19 +30,19 @@ async function init() {
   statusDiv = document.getElementById('status') as HTMLDivElement;
 
   // Show loading status
-  updateStatus('正在加载 WebAssembly 模块...', 'loading');
+  updateStatus('Loading WebAssembly module...', 'loading');
 
   try {
-    // Initialize WASM module (使用新的 ES Module 加载方式)
+    // Initialize WASM module (using new ES Module loading method)
     await initWasmModule();
-    updateStatus('✅ WebAssembly 模块加载成功！准备开始测试。', 'success');
+    updateStatus('✅ WebAssembly module loaded successfully! Ready to test.', 'success');
 
     // Enable run button
     runButton.disabled = false;
     runButton.addEventListener('click', runTests);
   } catch (error) {
     console.error('Failed to initialize:', error);
-    updateStatus('❌ 初始化失败: ' + (error as Error).message, 'error');
+    updateStatus('❌ Initialization failed: ' + (error as Error).message, 'error');
   }
 }
 
@@ -63,7 +63,7 @@ function updateProgress(current: number, total: number, testName: string) {
     <div class="progress-bar">
       <div class="progress-fill" style="width: ${percentage}%"></div>
     </div>
-    <div class="progress-text">测试进度: ${current}/${total} - ${testName}</div>
+    <div class="progress-text">Progress: ${current}/${total} - ${testName}</div>
   `;
 }
 
@@ -84,7 +84,7 @@ async function runTests() {
   };
 
   updateStatus(
-    `开始测试... 数组大小: ${config.arraySize.toLocaleString()}, 迭代次数: ${config.iterations}`,
+    `Starting tests... Array size: ${config.arraySize.toLocaleString()}, Iterations: ${config.iterations}`,
     'info'
   );
 
@@ -98,10 +98,10 @@ async function runTests() {
     // Display results
     displayResults(results);
 
-    updateStatus('✅ 测试完成！', 'success');
+    updateStatus('✅ Tests completed!', 'success');
   } catch (error) {
     console.error('Test failed:', error);
-    updateStatus('❌ 测试失败: ' + (error as Error).message, 'error');
+    updateStatus('❌ Tests failed: ' + (error as Error).message, 'error');
     progressDiv.style.display = 'none';
   } finally {
     // Re-enable button
@@ -121,22 +121,22 @@ function displayResults(results: BenchmarkResult[]) {
   // Create summary card
   const summaryHTML = `
     <div class="summary-card">
-      <h2>📊 测试总结</h2>
+      <h2>📊 Test Summary</h2>
       <div class="summary-stats">
         <div class="stat">
-          <div class="stat-label">总测试数</div>
+          <div class="stat-label">Total Tests</div>
           <div class="stat-value">${results.length}</div>
         </div>
         <div class="stat">
-          <div class="stat-label">WASM 胜利</div>
+          <div class="stat-label">WASM Wins</div>
           <div class="stat-value wasm-color">${wasmWins}</div>
         </div>
         <div class="stat">
-          <div class="stat-label">TypeScript 胜利</div>
+          <div class="stat-label">TypeScript Wins</div>
           <div class="stat-value ts-color">${tsWins}</div>
         </div>
         <div class="stat">
-          <div class="stat-label">平均加速比</div>
+          <div class="stat-label">Average Speedup</div>
           <div class="stat-value">${avgSpeedup.toFixed(2)}x</div>
         </div>
       </div>
@@ -179,8 +179,8 @@ function createResultCard(result: BenchmarkResult): HTMLDivElement {
   const winnerClass = result.winner === 'WASM' ? 'wasm-winner' : 'ts-winner';
   const speedupText =
     result.speedup >= 1
-      ? `WASM 快 ${result.speedup.toFixed(2)}x`
-      : `TypeScript 快 ${(1 / result.speedup).toFixed(2)}x`;
+      ? `WASM ${result.speedup.toFixed(2)}x faster`
+      : `TypeScript ${(1 / result.speedup).toFixed(2)}x faster`;
 
   // Extract function names from testName
   let tsFuncName = '';
