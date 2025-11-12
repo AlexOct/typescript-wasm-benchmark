@@ -1,9 +1,14 @@
 /**
- * Type definitions for Emscripten-generated WASM module
+ * Global type declarations for Emscripten-generated WASM module
  */
 
-declare module '../wasm/array_processor.js' {
-  export interface WasmModule {
+declare module '*.wasm' {
+  const content: string;
+  export default content;
+}
+
+declare module '*/wasm/array_processor.js' {
+  interface WasmModule {
     _malloc(size: number): number;
     _free(ptr: number): void;
     getValue(ptr: number, type: string): number;
@@ -24,5 +29,6 @@ declare module '../wasm/array_processor.js' {
     HEAPU32: Uint32Array;
   }
 
-  export default function createWasmModule(): Promise<WasmModule>;
+  function createWasmModule(): Promise<WasmModule>;
+  export default createWasmModule;
 }
