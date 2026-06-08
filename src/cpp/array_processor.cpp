@@ -747,4 +747,136 @@ extern "C"
         matrix[15] = 1.0f;
     }
 
+    EMSCRIPTEN_KEEPALIVE
+    uint64_t sumBinaryTreeDfs(const uint32_t *values, uint32_t nodeCount)
+    {
+        if (nodeCount == 0)
+            return 0;
+
+        uint64_t sum = 0;
+        uint32_t *stack = new uint32_t[nodeCount];
+        uint32_t stackSize = 0;
+        stack[stackSize++] = 0;
+
+        while (stackSize > 0)
+        {
+            uint32_t nodeIndex = stack[--stackSize];
+            sum += values[nodeIndex];
+
+            uint64_t rightChild = static_cast<uint64_t>(nodeIndex) * 2 + 2;
+            uint64_t leftChild = static_cast<uint64_t>(nodeIndex) * 2 + 1;
+
+            if (rightChild < nodeCount)
+            {
+                stack[stackSize++] = static_cast<uint32_t>(rightChild);
+            }
+            if (leftChild < nodeCount)
+            {
+                stack[stackSize++] = static_cast<uint32_t>(leftChild);
+            }
+        }
+
+        delete[] stack;
+        return sum;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint64_t sumBinaryTreeBfs(const uint32_t *values, uint32_t nodeCount)
+    {
+        if (nodeCount == 0)
+            return 0;
+
+        uint64_t sum = 0;
+        uint32_t *queue = new uint32_t[nodeCount];
+        uint32_t head = 0;
+        uint32_t tail = 0;
+        queue[tail++] = 0;
+
+        while (head < tail)
+        {
+            uint32_t nodeIndex = queue[head++];
+            sum += values[nodeIndex];
+
+            uint64_t leftChild = static_cast<uint64_t>(nodeIndex) * 2 + 1;
+            uint64_t rightChild = static_cast<uint64_t>(nodeIndex) * 2 + 2;
+
+            if (leftChild < nodeCount)
+            {
+                queue[tail++] = static_cast<uint32_t>(leftChild);
+            }
+            if (rightChild < nodeCount)
+            {
+                queue[tail++] = static_cast<uint32_t>(rightChild);
+            }
+        }
+
+        delete[] queue;
+        return sum;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint64_t sumNaryTreeDfs(
+        const uint32_t *values,
+        const uint32_t *childOffsets,
+        const uint32_t *children,
+        uint32_t nodeCount)
+    {
+        if (nodeCount == 0)
+            return 0;
+
+        uint64_t sum = 0;
+        uint32_t *stack = new uint32_t[nodeCount];
+        uint32_t stackSize = 0;
+        stack[stackSize++] = 0;
+
+        while (stackSize > 0)
+        {
+            uint32_t nodeIndex = stack[--stackSize];
+            sum += values[nodeIndex];
+
+            uint32_t start = childOffsets[nodeIndex];
+            uint32_t end = childOffsets[nodeIndex + 1];
+            for (uint32_t childCursor = end; childCursor > start; childCursor--)
+            {
+                stack[stackSize++] = children[childCursor - 1];
+            }
+        }
+
+        delete[] stack;
+        return sum;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint64_t sumNaryTreeBfs(
+        const uint32_t *values,
+        const uint32_t *childOffsets,
+        const uint32_t *children,
+        uint32_t nodeCount)
+    {
+        if (nodeCount == 0)
+            return 0;
+
+        uint64_t sum = 0;
+        uint32_t *queue = new uint32_t[nodeCount];
+        uint32_t head = 0;
+        uint32_t tail = 0;
+        queue[tail++] = 0;
+
+        while (head < tail)
+        {
+            uint32_t nodeIndex = queue[head++];
+            sum += values[nodeIndex];
+
+            uint32_t start = childOffsets[nodeIndex];
+            uint32_t end = childOffsets[nodeIndex + 1];
+            for (uint32_t childCursor = start; childCursor < end; childCursor++)
+            {
+                queue[tail++] = children[childCursor];
+            }
+        }
+
+        delete[] queue;
+        return sum;
+    }
+
 } // extern "C"

@@ -2,9 +2,14 @@
  */
 
 import { getWasmModuleInstance } from './framework/wasm-loader';
+import type { NaryTreeData } from './ts-algorithms';
 
 function getWasmModule() {
   return getWasmModuleInstance();
+}
+
+function toNumber(value: number | bigint): number {
+  return Number(value);
 }
 
 export function allocateArray(arr: Uint32Array): number {
@@ -130,6 +135,98 @@ export function readFloatArrayEx(ptr: number, length: number): Float32Array {
 }
 /**
  */
+
+export interface PreparedWasmBinaryTree {
+  valuesPtr: number;
+  nodeCount: number;
+  dispose: () => void;
+}
+
+export interface PreparedWasmNaryTree {
+  valuesPtr: number;
+  childOffsetsPtr: number;
+  childrenPtr: number;
+  nodeCount: number;
+  dispose: () => void;
+}
+
+function callBinaryTreeSum(functionName: string, tree: PreparedWasmBinaryTree): number {
+  const module = getWasmModule();
+  const sum = module.ccall(
+    functionName,
+    'number',
+    ['number', 'number'],
+    [tree.valuesPtr, tree.nodeCount]
+  );
+  return toNumber(sum);
+}
+
+function callNaryTreeSum(functionName: string, tree: PreparedWasmNaryTree): number {
+  const module = getWasmModule();
+  const sum = module.ccall(
+    functionName,
+    'number',
+    ['number', 'number', 'number', 'number'],
+    [tree.valuesPtr, tree.childOffsetsPtr, tree.childrenPtr, tree.nodeCount]
+  );
+  return toNumber(sum);
+}
+
+function createPreparedBinaryTree(values: Uint32Array): PreparedWasmBinaryTree {
+  const valuesPtr = allocateArrayEx(values);
+  let disposed = false;
+
+  return {
+    valuesPtr,
+    nodeCount: values.length,
+    dispose: () => {
+      if (!disposed) {
+        freeArray(valuesPtr);
+        disposed = true;
+      }
+    },
+  };
+}
+
+function createPreparedNaryTree(tree: NaryTreeData): PreparedWasmNaryTree {
+  let valuesPtr = 0;
+  let childOffsetsPtr = 0;
+  let childrenPtr = 0;
+
+  try {
+    valuesPtr = allocateArrayEx(tree.values);
+    childOffsetsPtr = allocateArrayEx(tree.childOffsets);
+    childrenPtr = allocateArrayEx(tree.children);
+  } catch (error) {
+    if (childrenPtr) {
+      freeArray(childrenPtr);
+    }
+    if (childOffsetsPtr) {
+      freeArray(childOffsetsPtr);
+    }
+    if (valuesPtr) {
+      freeArray(valuesPtr);
+    }
+    throw error;
+  }
+
+  let disposed = false;
+
+  return {
+    valuesPtr,
+    childOffsetsPtr,
+    childrenPtr,
+    nodeCount: tree.values.length,
+    dispose: () => {
+      if (!disposed) {
+        freeArray(valuesPtr);
+        freeArray(childOffsetsPtr);
+        freeArray(childrenPtr);
+        disposed = true;
+      }
+    },
+  };
+}
 
 export const wasmAlgorithms = {
   /**
@@ -338,6 +435,66 @@ export const wasmAlgorithms = {
       );
     } finally {
       freeArray(ptr);
+    }
+  },
+
+  prepareBinaryTree(values: Uint32Array): PreparedWasmBinaryTree {
+    return createPreparedBinaryTree(values);
+  },
+
+  prepareNaryTree(tree: NaryTreeData): PreparedWasmNaryTree {
+    return createPreparedNaryTree(tree);
+  },
+
+  sumBinaryTreeDfs(tree: PreparedWasmBinaryTree): number {
+    return callBinaryTreeSum('sumBinaryTreeDfs', tree);
+  },
+
+  sumBinaryTreeBfs(tree: PreparedWasmBinaryTree): number {
+    return callBinaryTreeSum('sumBinaryTreeBfs', tree);
+  },
+
+  sumNaryTreeDfs(tree: PreparedWasmNaryTree): number {
+    return callNaryTreeSum('sumNaryTreeDfs', tree);
+  },
+
+  sumNaryTreeBfs(tree: PreparedWasmNaryTree): number {
+    return callNaryTreeSum('sumNaryTreeBfs', tree);
+  },
+
+  sumBinaryTreeDfsEndToEnd(values: Uint32Array): number {
+    const tree = createPreparedBinaryTree(values);
+    try {
+      return callBinaryTreeSum('sumBinaryTreeDfs', tree);
+    } finally {
+      tree.dispose();
+    }
+  },
+
+  sumBinaryTreeBfsEndToEnd(values: Uint32Array): number {
+    const tree = createPreparedBinaryTree(values);
+    try {
+      return callBinaryTreeSum('sumBinaryTreeBfs', tree);
+    } finally {
+      tree.dispose();
+    }
+  },
+
+  sumNaryTreeDfsEndToEnd(treeData: NaryTreeData): number {
+    const tree = createPreparedNaryTree(treeData);
+    try {
+      return callNaryTreeSum('sumNaryTreeDfs', tree);
+    } finally {
+      tree.dispose();
+    }
+  },
+
+  sumNaryTreeBfsEndToEnd(treeData: NaryTreeData): number {
+    const tree = createPreparedNaryTree(treeData);
+    try {
+      return callNaryTreeSum('sumNaryTreeBfs', tree);
+    } finally {
+      tree.dispose();
     }
   },
 

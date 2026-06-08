@@ -221,6 +221,112 @@ export function countUnique(arr: Uint32Array): number {
   return unique;
 }
 
+export interface NaryTreeData {
+  values: Uint32Array;
+  childOffsets: Uint32Array;
+  children: Uint32Array;
+}
+
+export function sumBinaryTreeDfs(values: Uint32Array): number {
+  if (values.length === 0) return 0;
+
+  let sum = 0;
+  const stack = new Uint32Array(values.length);
+  let stackSize = 0;
+  stack[stackSize++] = 0;
+
+  while (stackSize > 0) {
+    const nodeIndex = stack[--stackSize];
+    sum += values[nodeIndex];
+
+    const rightChild = nodeIndex * 2 + 2;
+    const leftChild = nodeIndex * 2 + 1;
+
+    if (rightChild < values.length) {
+      stack[stackSize++] = rightChild;
+    }
+    if (leftChild < values.length) {
+      stack[stackSize++] = leftChild;
+    }
+  }
+
+  return sum;
+}
+
+export function sumBinaryTreeBfs(values: Uint32Array): number {
+  if (values.length === 0) return 0;
+
+  let sum = 0;
+  const queue = new Uint32Array(values.length);
+  let head = 0;
+  let tail = 0;
+  queue[tail++] = 0;
+
+  while (head < tail) {
+    const nodeIndex = queue[head++];
+    sum += values[nodeIndex];
+
+    const leftChild = nodeIndex * 2 + 1;
+    const rightChild = nodeIndex * 2 + 2;
+
+    if (leftChild < values.length) {
+      queue[tail++] = leftChild;
+    }
+    if (rightChild < values.length) {
+      queue[tail++] = rightChild;
+    }
+  }
+
+  return sum;
+}
+
+export function sumNaryTreeDfs(tree: NaryTreeData): number {
+  const { values, childOffsets, children } = tree;
+  if (values.length === 0) return 0;
+
+  let sum = 0;
+  const stack = new Uint32Array(values.length);
+  let stackSize = 0;
+  stack[stackSize++] = 0;
+
+  while (stackSize > 0) {
+    const nodeIndex = stack[--stackSize];
+    sum += values[nodeIndex];
+
+    const start = childOffsets[nodeIndex];
+    const end = childOffsets[nodeIndex + 1];
+    for (let childCursor = end; childCursor > start; childCursor--) {
+      stack[stackSize++] = children[childCursor - 1];
+    }
+  }
+
+  return sum;
+}
+
+export function sumNaryTreeBfs(tree: NaryTreeData): number {
+  const { values, childOffsets, children } = tree;
+  if (values.length === 0) return 0;
+
+  let sum = 0;
+  const queue = new Uint32Array(values.length);
+  let head = 0;
+  let tail = 0;
+  queue[tail++] = 0;
+
+  while (head < tail) {
+    const nodeIndex = queue[head++];
+    sum += values[nodeIndex];
+
+    const start = childOffsets[nodeIndex];
+    const end = childOffsets[nodeIndex + 1];
+    for (let childCursor = start; childCursor < end; childCursor++) {
+      queue[tail++] = children[childCursor];
+    }
+  }
+
+  return sum;
+}
+
 /**
  * Apply 4x4 transformation matrix to 3D vectors
  * Input format: [x1, y1, z1, x2, y2, z2, ...]

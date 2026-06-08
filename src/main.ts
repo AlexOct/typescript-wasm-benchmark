@@ -182,21 +182,23 @@ function createResultCard(result: BenchmarkResult): HTMLDivElement {
       ? `WASM ${result.speedup.toFixed(2)}x faster`
       : `TypeScript ${(1 / result.speedup).toFixed(2)}x faster`;
 
-  // Extract function names from testName
-  let tsFuncName = '';
-  let wasmFuncName = '';
+  // Extract function names from testName unless explicit metadata is available
+  let tsFuncName = result.tsFuncName ?? '';
+  let wasmFuncName = result.wasmFuncName ?? '';
 
   // Determine function names based on test name
-  if (result.testName.includes('SIMD')) {
-    // SIMD test
-    const baseName = result.testName.replace(' (SIMD)', '');
-    tsFuncName = convertToFuncName(baseName);
-    wasmFuncName = convertToFuncName(baseName) + 'SIMD';
-  } else {
-    // Regular test
-    const funcName = convertToFuncName(result.testName);
-    tsFuncName = funcName;
-    wasmFuncName = funcName;
+  if (!tsFuncName || !wasmFuncName) {
+    if (result.testName.includes('SIMD')) {
+      // SIMD test
+      const baseName = result.testName.replace(' (SIMD)', '');
+      tsFuncName ||= convertToFuncName(baseName);
+      wasmFuncName ||= convertToFuncName(baseName) + 'SIMD';
+    } else {
+      // Regular test
+      const funcName = convertToFuncName(result.testName);
+      tsFuncName ||= funcName;
+      wasmFuncName ||= funcName;
+    }
   }
 
   card.innerHTML = `

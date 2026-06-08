@@ -4,10 +4,16 @@
  */
 
 import * as tsAlgorithms from './ts-algorithms';
-import { wasmAlgorithms } from './wasm-algorithms';
+import {
+  type PreparedWasmBinaryTree,
+  type PreparedWasmNaryTree,
+  wasmAlgorithms,
+} from './wasm-algorithms';
 
 export interface BenchmarkResult {
   testName: string;
+  tsFuncName?: string;
+  wasmFuncName?: string;
   tsTime: number;
   wasmTime: number;
   tsTimes: number[];
@@ -60,6 +66,72 @@ export function generateRandomVectors(count: number): Float32Array {
   return arr;
 }
 
+const TREE_NODE_COUNT = 1_000_000;
+const NARY_TREE_CHILDREN_PER_NODE = 4;
+
+interface BinaryTreeBenchmarkData {
+  values: Uint32Array;
+  wasmTree: PreparedWasmBinaryTree;
+}
+
+interface NaryTreeBenchmarkData {
+  tree: tsAlgorithms.NaryTreeData;
+  wasmTree: PreparedWasmNaryTree;
+}
+
+function generateTreeValues(size: number): Uint32Array {
+  const values = new Uint32Array(size);
+  for (let i = 0; i < size; i++) {
+    values[i] = ((i * 2654435761) >>> 0) % 1000000;
+  }
+  return values;
+}
+
+function generateNaryTree(size: number): tsAlgorithms.NaryTreeData {
+  const values = generateTreeValues(size);
+  const childOffsets = new Uint32Array(size + 1);
+  const children = new Uint32Array(Math.max(0, size - 1));
+  let childCursor = 0;
+
+  for (let nodeIndex = 0; nodeIndex < size; nodeIndex++) {
+    childOffsets[nodeIndex] = childCursor;
+    const firstChild = nodeIndex * NARY_TREE_CHILDREN_PER_NODE + 1;
+    const endChild = Math.min(size, firstChild + NARY_TREE_CHILDREN_PER_NODE);
+
+    for (let childIndex = firstChild; childIndex < endChild; childIndex++) {
+      children[childCursor++] = childIndex;
+    }
+  }
+
+  childOffsets[size] = childCursor;
+
+  return { values, childOffsets, children };
+}
+
+function cloneNaryTree(tree: tsAlgorithms.NaryTreeData): tsAlgorithms.NaryTreeData {
+  return {
+    values: new Uint32Array(tree.values),
+    childOffsets: new Uint32Array(tree.childOffsets),
+    children: new Uint32Array(tree.children),
+  };
+}
+
+function prepareBinaryTreeBenchmarkData(): BinaryTreeBenchmarkData {
+  const values = generateTreeValues(TREE_NODE_COUNT);
+  return {
+    values,
+    wasmTree: wasmAlgorithms.prepareBinaryTree(values),
+  };
+}
+
+function prepareNaryTreeBenchmarkData(): NaryTreeBenchmarkData {
+  const tree = generateNaryTree(TREE_NODE_COUNT);
+  return {
+    tree,
+    wasmTree: wasmAlgorithms.prepareNaryTree(tree),
+  };
+}
+
 /**
  * Calculate median from array of numbers
  */
@@ -91,7 +163,9 @@ export async function runBenchmark(
   testName: string,
   tsFunc: () => any,
   wasmFunc: () => any,
-  config: TestConfig
+  config: TestConfig,
+  tsFuncName?: string,
+  wasmFuncName?: string
 ): Promise<BenchmarkResult> {
   const tsTimes: number[] = [];
   const wasmTimes: number[] = [];
@@ -150,6 +224,8 @@ export async function runBenchmark(
 
   return {
     testName,
+    tsFuncName,
+    wasmFuncName,
     tsTime: tsAvg,
     wasmTime: wasmAvg,
     tsTimes,
@@ -170,11 +246,14 @@ export async function runBenchmark(
 /**
  * Benchmark test definitions
  */
-export interface BenchmarkTest {
+export interface BenchmarkTest<TData = any> {
   name: string;
-  prepare: (size: number) => any;
-  tsFunc: (data: any) => any;
-  wasmFunc: (data: any) => any;
+  tsFuncName?: string;
+  wasmFuncName?: string;
+  prepare: (size: number) => TData;
+  tsFunc: (data: TData) => any;
+  wasmFunc: (data: TData) => any;
+  cleanup?: (data: TData) => void;
 }
 
 export const benchmarkTests: BenchmarkTest[] = [
@@ -287,6 +366,77 @@ export const benchmarkTests: BenchmarkTest[] = [
     wasmFunc: (arr) => wasmAlgorithms.countGreaterThanSIMD(arr, 500000),
   },
 
+  // ========== TREE TRAVERSAL TESTS ==========
+
+  {
+    name: 'Binary Tree DFS Traversal Only',
+    tsFuncName: 'sumBinaryTreeDfs',
+    wasmFuncName: 'sumBinaryTreeDfs',
+    prepare: () => prepareBinaryTreeBenchmarkData(),
+    tsFunc: (data: BinaryTreeBenchmarkData) => tsAlgorithms.sumBinaryTreeDfs(data.values),
+    wasmFunc: (data: BinaryTreeBenchmarkData) => wasmAlgorithms.sumBinaryTreeDfs(data.wasmTree),
+    cleanup: (data: BinaryTreeBenchmarkData) => data.wasmTree.dispose(),
+  },
+  {
+    name: 'Binary Tree BFS Traversal Only',
+    tsFuncName: 'sumBinaryTreeBfs',
+    wasmFuncName: 'sumBinaryTreeBfs',
+    prepare: () => prepareBinaryTreeBenchmarkData(),
+    tsFunc: (data: BinaryTreeBenchmarkData) => tsAlgorithms.sumBinaryTreeBfs(data.values),
+    wasmFunc: (data: BinaryTreeBenchmarkData) => wasmAlgorithms.sumBinaryTreeBfs(data.wasmTree),
+    cleanup: (data: BinaryTreeBenchmarkData) => data.wasmTree.dispose(),
+  },
+  {
+    name: 'N-ary Tree DFS Traversal Only',
+    tsFuncName: 'sumNaryTreeDfs',
+    wasmFuncName: 'sumNaryTreeDfs',
+    prepare: () => prepareNaryTreeBenchmarkData(),
+    tsFunc: (data: NaryTreeBenchmarkData) => tsAlgorithms.sumNaryTreeDfs(data.tree),
+    wasmFunc: (data: NaryTreeBenchmarkData) => wasmAlgorithms.sumNaryTreeDfs(data.wasmTree),
+    cleanup: (data: NaryTreeBenchmarkData) => data.wasmTree.dispose(),
+  },
+  {
+    name: 'N-ary Tree BFS Traversal Only',
+    tsFuncName: 'sumNaryTreeBfs',
+    wasmFuncName: 'sumNaryTreeBfs',
+    prepare: () => prepareNaryTreeBenchmarkData(),
+    tsFunc: (data: NaryTreeBenchmarkData) => tsAlgorithms.sumNaryTreeBfs(data.tree),
+    wasmFunc: (data: NaryTreeBenchmarkData) => wasmAlgorithms.sumNaryTreeBfs(data.wasmTree),
+    cleanup: (data: NaryTreeBenchmarkData) => data.wasmTree.dispose(),
+  },
+  {
+    name: 'Binary Tree DFS End-to-End',
+    tsFuncName: 'sumBinaryTreeDfs',
+    wasmFuncName: 'sumBinaryTreeDfsEndToEnd',
+    prepare: () => generateTreeValues(TREE_NODE_COUNT),
+    tsFunc: (values: Uint32Array) => tsAlgorithms.sumBinaryTreeDfs(new Uint32Array(values)),
+    wasmFunc: (values: Uint32Array) => wasmAlgorithms.sumBinaryTreeDfsEndToEnd(values),
+  },
+  {
+    name: 'Binary Tree BFS End-to-End',
+    tsFuncName: 'sumBinaryTreeBfs',
+    wasmFuncName: 'sumBinaryTreeBfsEndToEnd',
+    prepare: () => generateTreeValues(TREE_NODE_COUNT),
+    tsFunc: (values: Uint32Array) => tsAlgorithms.sumBinaryTreeBfs(new Uint32Array(values)),
+    wasmFunc: (values: Uint32Array) => wasmAlgorithms.sumBinaryTreeBfsEndToEnd(values),
+  },
+  {
+    name: 'N-ary Tree DFS End-to-End',
+    tsFuncName: 'sumNaryTreeDfs',
+    wasmFuncName: 'sumNaryTreeDfsEndToEnd',
+    prepare: () => generateNaryTree(TREE_NODE_COUNT),
+    tsFunc: (tree: tsAlgorithms.NaryTreeData) => tsAlgorithms.sumNaryTreeDfs(cloneNaryTree(tree)),
+    wasmFunc: (tree: tsAlgorithms.NaryTreeData) => wasmAlgorithms.sumNaryTreeDfsEndToEnd(tree),
+  },
+  {
+    name: 'N-ary Tree BFS End-to-End',
+    tsFuncName: 'sumNaryTreeBfs',
+    wasmFuncName: 'sumNaryTreeBfsEndToEnd',
+    prepare: () => generateNaryTree(TREE_NODE_COUNT),
+    tsFunc: (tree: tsAlgorithms.NaryTreeData) => tsAlgorithms.sumNaryTreeBfs(cloneNaryTree(tree)),
+    wasmFunc: (tree: tsAlgorithms.NaryTreeData) => wasmAlgorithms.sumNaryTreeBfsEndToEnd(tree),
+  },
+
   // ========== MATRIX TRANSFORMATION TESTS ==========
 
   {
@@ -340,16 +490,21 @@ export async function runAllBenchmarks(
     }
 
     const data = test.prepare(config.arraySize);
+    try {
+      const result = await runBenchmark(
+        test.name,
+        () => test.tsFunc(data),
+        () => test.wasmFunc(data),
+        config,
+        test.tsFuncName,
+        test.wasmFuncName
+      );
 
-    const result = await runBenchmark(
-      test.name,
-      () => test.tsFunc(data),
-      () => test.wasmFunc(data),
-      config
-    );
-
-    results.push(result);
-    console.log(`✅ ${test.name}: WASM ${result.speedup.toFixed(2)}x`);
+      results.push(result);
+      console.log(`✅ ${test.name}: WASM ${result.speedup.toFixed(2)}x`);
+    } finally {
+      test.cleanup?.(data);
+    }
   }
 
   return results;
