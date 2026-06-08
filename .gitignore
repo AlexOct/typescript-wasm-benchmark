@@ -23,7 +23,11 @@ pnpm-debug.log*
 # IDE - exclude all local settings
 .vscode/
 .idea/
-.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/add-benchmark-example/
+!.claude/skills/add-benchmark-example/**
 *.swp
 *.swo
 *~
