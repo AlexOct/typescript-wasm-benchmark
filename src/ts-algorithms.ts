@@ -327,6 +327,70 @@ export function sumNaryTreeBfs(tree: NaryTreeData): number {
   return sum;
 }
 
+export interface StringMapData {
+  keys: string[];
+  values: Uint32Array;
+}
+
+export function createStringMap(data: StringMapData): Map<string, number> {
+  const map = new Map<string, number>();
+  for (let i = 0; i < data.keys.length; i++) {
+    map.set(data.keys[i], data.values[i]);
+  }
+  return map;
+}
+
+export function insertStringMapEntries(data: StringMapData): number {
+  return createStringMap(data).size;
+}
+
+export function lookupStringMapEntries(data: StringMapData, map: Map<string, number>): number {
+  let checksum = 0;
+  for (let i = 0; i < data.keys.length; i++) {
+    checksum += map.get(data.keys[i]) ?? 0;
+  }
+  return checksum;
+}
+
+export function deleteStringMapEntries(data: StringMapData, map: Map<string, number>): number {
+  for (let i = 0; i < data.keys.length; i++) {
+    map.delete(data.keys[i]);
+  }
+  return map.size;
+}
+
+export interface NumberMapData {
+  keys: Uint32Array;
+  values: Uint32Array;
+}
+
+export function createNumberMap(data: NumberMapData): Map<number, number> {
+  const map = new Map<number, number>();
+  for (let i = 0; i < data.keys.length; i++) {
+    map.set(data.keys[i], data.values[i]);
+  }
+  return map;
+}
+
+export function insertNumberMapEntries(data: NumberMapData): number {
+  return createNumberMap(data).size;
+}
+
+export function lookupNumberMapEntries(data: NumberMapData, map: Map<number, number>): number {
+  let checksum = 0;
+  for (let i = 0; i < data.keys.length; i++) {
+    checksum += map.get(data.keys[i]) ?? 0;
+  }
+  return checksum;
+}
+
+export function deleteNumberMapEntries(data: NumberMapData, map: Map<number, number>): number {
+  for (let i = 0; i < data.keys.length; i++) {
+    map.delete(data.keys[i]);
+  }
+  return map.size;
+}
+
 /**
  * Apply 4x4 transformation matrix to 3D vectors
  * Input format: [x1, y1, z1, x2, y2, z2, ...]

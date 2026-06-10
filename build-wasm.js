@@ -25,7 +25,7 @@ try {
 const emccCommand = `emcc src/cpp/array_processor.cpp -o src/wasm/array_processor.js ` +
     `-s WASM=1 ` +
     `-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','getValue','setValue','HEAP8','HEAPU8','HEAP32','HEAPF32','HEAPU32','HEAPF64'] ` +
-    `-s EXPORTED_FUNCTIONS=['_malloc','_free','_sumArray','_findMax','_findMin','_calculateAverage','_multiplyArray','_countGreaterThan','_quickSort','_reverseArray','_calculateVariance','_binarySearch','_addToArray','_countUnique','_sumArraySIMD','_findMaxSIMD','_findMinSIMD','_calculateAverageSIMD','_multiplyArraySIMD','_addToArraySIMD','_countGreaterThanSIMD','_transformVectors','_transformVectorsSIMD','_sumBinaryTreeDfs','_sumBinaryTreeBfs','_sumNaryTreeDfs','_sumNaryTreeBfs','_createTransformMatrix'] ` +
+    `-s EXPORTED_FUNCTIONS=['_malloc','_free','_sumArray','_findMax','_findMin','_calculateAverage','_multiplyArray','_countGreaterThan','_quickSort','_reverseArray','_calculateVariance','_binarySearch','_addToArray','_countUnique','_sumArraySIMD','_findMaxSIMD','_findMinSIMD','_calculateAverageSIMD','_multiplyArraySIMD','_addToArraySIMD','_countGreaterThanSIMD','_transformVectors','_transformVectorsSIMD','_sumBinaryTreeDfs','_sumBinaryTreeBfs','_sumNaryTreeDfs','_sumNaryTreeBfs','_createStringMapData','_freeStringMapData','_prepareStringMap','_freePreparedStringMap','_insertStringMapEntries','_lookupStringMapEntries','_deleteStringMapEntries','_prepareNumberTreeMap','_freePreparedNumberTreeMap','_insertNumberTreeMapEntries','_lookupNumberTreeMapEntries','_deleteNumberTreeMapEntries','_createTransformMatrix'] ` +
     `-s ALLOW_MEMORY_GROWTH=1 ` +
     `-s INITIAL_MEMORY=33554432 ` +
     `-s MAXIMUM_MEMORY=2147483648 ` +

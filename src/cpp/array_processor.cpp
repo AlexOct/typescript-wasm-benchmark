@@ -1,5 +1,8 @@
 #include <emscripten.h>
 #include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <map>
 #include <algorithm>
 #include <cmath>
 #include <wasm_simd128.h>
@@ -877,6 +880,180 @@ extern "C"
 
         delete[] queue;
         return sum;
+    }
+
+    struct StringMapDataHandle
+    {
+        std::string *keys;
+        uint32_t *values;
+        uint32_t count;
+    };
+
+    struct PreparedStringMapHandle
+    {
+        StringMapDataHandle *data;
+        std::unordered_map<std::string, uint32_t> *map;
+    };
+
+    struct PreparedNumberTreeMapHandle
+    {
+        const uint32_t *keys;
+        const uint32_t *values;
+        uint32_t count;
+        std::map<uint32_t, uint32_t> *map;
+    };
+
+    EMSCRIPTEN_KEEPALIVE
+    StringMapDataHandle *createStringMapData(
+        const char *keyBytes,
+        const uint32_t *keyOffsets,
+        const uint32_t *values,
+        uint32_t count)
+    {
+        StringMapDataHandle *handle = new StringMapDataHandle;
+        handle->keys = new std::string[count];
+        handle->values = new uint32_t[count];
+        handle->count = count;
+
+        for (uint32_t i = 0; i < count; i++)
+        {
+            uint32_t start = keyOffsets[i];
+            uint32_t end = keyOffsets[i + 1];
+            handle->keys[i] = std::string(keyBytes + start, end - start);
+            handle->values[i] = values[i];
+        }
+
+        return handle;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void freeStringMapData(StringMapDataHandle *handle)
+    {
+        if (!handle)
+            return;
+        delete[] handle->keys;
+        delete[] handle->values;
+        delete handle;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    PreparedStringMapHandle *prepareStringMap(StringMapDataHandle *data)
+    {
+        PreparedStringMapHandle *handle = new PreparedStringMapHandle;
+        handle->data = data;
+        handle->map = new std::unordered_map<std::string, uint32_t>();
+        handle->map->reserve(data->count);
+        for (uint32_t i = 0; i < data->count; i++)
+        {
+            (*handle->map)[data->keys[i]] = data->values[i];
+        }
+        return handle;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void freePreparedStringMap(PreparedStringMapHandle *handle)
+    {
+        if (!handle)
+            return;
+        delete handle->map;
+        delete handle;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint32_t insertStringMapEntries(StringMapDataHandle *data)
+    {
+        std::unordered_map<std::string, uint32_t> map;
+        map.reserve(data->count);
+        for (uint32_t i = 0; i < data->count; i++)
+        {
+            map[data->keys[i]] = data->values[i];
+        }
+        return static_cast<uint32_t>(map.size());
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint64_t lookupStringMapEntries(PreparedStringMapHandle *handle)
+    {
+        uint64_t checksum = 0;
+        for (uint32_t i = 0; i < handle->data->count; i++)
+        {
+            auto found = handle->map->find(handle->data->keys[i]);
+            if (found != handle->map->end())
+            {
+                checksum += found->second;
+            }
+        }
+        return checksum;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint32_t deleteStringMapEntries(PreparedStringMapHandle *handle)
+    {
+        for (uint32_t i = 0; i < handle->data->count; i++)
+        {
+            handle->map->erase(handle->data->keys[i]);
+        }
+        return static_cast<uint32_t>(handle->map->size());
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    PreparedNumberTreeMapHandle *prepareNumberTreeMap(const uint32_t *keys, const uint32_t *values, uint32_t count)
+    {
+        PreparedNumberTreeMapHandle *handle = new PreparedNumberTreeMapHandle;
+        handle->keys = keys;
+        handle->values = values;
+        handle->count = count;
+        handle->map = new std::map<uint32_t, uint32_t>();
+        for (uint32_t i = 0; i < count; i++)
+        {
+            (*handle->map)[keys[i]] = values[i];
+        }
+        return handle;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void freePreparedNumberTreeMap(PreparedNumberTreeMapHandle *handle)
+    {
+        if (!handle)
+            return;
+        delete handle->map;
+        delete handle;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint32_t insertNumberTreeMapEntries(const uint32_t *keys, const uint32_t *values, uint32_t count)
+    {
+        std::map<uint32_t, uint32_t> map;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            map[keys[i]] = values[i];
+        }
+        return static_cast<uint32_t>(map.size());
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint64_t lookupNumberTreeMapEntries(PreparedNumberTreeMapHandle *handle)
+    {
+        uint64_t checksum = 0;
+        for (uint32_t i = 0; i < handle->count; i++)
+        {
+            auto found = handle->map->find(handle->keys[i]);
+            if (found != handle->map->end())
+            {
+                checksum += found->second;
+            }
+        }
+        return checksum;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    uint32_t deleteNumberTreeMapEntries(PreparedNumberTreeMapHandle *handle)
+    {
+        for (uint32_t i = 0; i < handle->count; i++)
+        {
+            handle->map->erase(handle->keys[i]);
+        }
+        return static_cast<uint32_t>(handle->map->size());
     }
 
 } // extern "C"

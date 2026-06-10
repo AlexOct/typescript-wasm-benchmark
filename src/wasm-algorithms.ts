@@ -2,7 +2,7 @@
  */
 
 import { getWasmModuleInstance } from './framework/wasm-loader';
-import type { NaryTreeData } from './ts-algorithms';
+import type { NaryTreeData, NumberMapData, StringMapData } from './ts-algorithms';
 
 function getWasmModule() {
   return getWasmModuleInstance();
@@ -10,6 +10,13 @@ function getWasmModule() {
 
 function toNumber(value: number | bigint): number {
   return Number(value);
+}
+
+function assertPointer(ptr: number, name: string): number {
+  if (!ptr) {
+    throw new Error(`Failed to create ${name} in WASM`);
+  }
+  return ptr;
 }
 
 export function allocateArray(arr: Uint32Array): number {
@@ -226,6 +233,221 @@ function createPreparedNaryTree(tree: NaryTreeData): PreparedWasmNaryTree {
       }
     },
   };
+}
+
+export interface PreparedWasmStringMapData {
+  keyBytesPtr: number;
+  keyOffsetsPtr: number;
+  valuesPtr: number;
+  dataPtr: number;
+  count: number;
+  dispose: () => void;
+}
+
+export interface PreparedWasmStringMap {
+  data: PreparedWasmStringMapData;
+  mapPtr: number;
+  dispose: () => void;
+}
+
+export interface PreparedWasmNumberTreeMapData {
+  keysPtr: number;
+  valuesPtr: number;
+  count: number;
+  dispose: () => void;
+}
+
+export interface PreparedWasmNumberTreeMap {
+  data: PreparedWasmNumberTreeMapData;
+  mapPtr: number;
+  dispose: () => void;
+}
+
+const textEncoder = new TextEncoder();
+
+function createStringMapEncoding(data: StringMapData): { keyBytes: Uint8Array; keyOffsets: Uint32Array } {
+  const encodedKeys = data.keys.map(key => textEncoder.encode(key));
+  const keyOffsets = new Uint32Array(data.keys.length + 1);
+  let totalBytes = 0;
+
+  for (let i = 0; i < encodedKeys.length; i++) {
+    keyOffsets[i] = totalBytes;
+    totalBytes += encodedKeys[i].length;
+  }
+  keyOffsets[encodedKeys.length] = totalBytes;
+
+  const keyBytes = new Uint8Array(totalBytes);
+  let cursor = 0;
+  for (const encodedKey of encodedKeys) {
+    keyBytes.set(encodedKey, cursor);
+    cursor += encodedKey.length;
+  }
+
+  return { keyBytes, keyOffsets };
+}
+
+function allocateBytes(bytes: Uint8Array): number {
+  if (bytes.length === 0) {
+    return 0;
+  }
+
+  const module = getWasmModule();
+  const ptr = module._malloc(bytes.length);
+  if (!ptr) {
+    throw new Error('Failed to allocate memory in WASM');
+  }
+  (module as typeof module & { HEAPU8: Uint8Array }).HEAPU8.set(bytes, ptr);
+  return ptr;
+}
+
+function callStringMapData(functionName: string, data: PreparedWasmStringMapData): number {
+  const result = getWasmModule().ccall(
+    functionName,
+    'number',
+    ['number'],
+    [data.dataPtr]
+  );
+  return toNumber(result);
+}
+
+function createPreparedStringMapData(data: StringMapData): PreparedWasmStringMapData {
+  if (data.values.length !== data.keys.length) {
+    throw new Error('StringMapData values length must match keys length');
+  }
+
+  const { keyBytes, keyOffsets } = createStringMapEncoding(data);
+  let keyBytesPtr = 0;
+  let keyOffsetsPtr = 0;
+  let valuesPtr = 0;
+  let dataPtr = 0;
+
+  try {
+    keyBytesPtr = allocateBytes(keyBytes);
+    keyOffsetsPtr = allocateArrayEx(keyOffsets);
+    valuesPtr = data.values.length > 0 ? allocateArrayEx(data.values) : 0;
+    dataPtr = assertPointer(toNumber(getWasmModule().ccall(
+      'createStringMapData',
+      'number',
+      ['number', 'number', 'number', 'number'],
+      [keyBytesPtr, keyOffsetsPtr, valuesPtr, data.keys.length]
+    )), 'string map data');
+  } catch (error) {
+    if (dataPtr) {
+      getWasmModule().ccall('freeStringMapData', null, ['number'], [dataPtr]);
+    }
+    if (valuesPtr) freeArray(valuesPtr);
+    if (keyOffsetsPtr) freeArray(keyOffsetsPtr);
+    if (keyBytesPtr) freeArray(keyBytesPtr);
+    throw error;
+  }
+
+  let disposed = false;
+  return {
+    keyBytesPtr,
+    keyOffsetsPtr,
+    valuesPtr,
+    dataPtr,
+    count: data.keys.length,
+    dispose: () => {
+      if (!disposed) {
+        getWasmModule().ccall('freeStringMapData', null, ['number'], [dataPtr]);
+        if (valuesPtr) freeArray(valuesPtr);
+        freeArray(keyOffsetsPtr);
+        if (keyBytesPtr) freeArray(keyBytesPtr);
+        disposed = true;
+      }
+    },
+  };
+}
+
+function createPreparedStringMapWith(
+  data: PreparedWasmStringMapData,
+  prepareFunctionName: string,
+  freeFunctionName: string,
+  name: string
+): PreparedWasmStringMap {
+  const mapPtr = assertPointer(toNumber(getWasmModule().ccall(
+    prepareFunctionName,
+    'number',
+    ['number'],
+    [data.dataPtr]
+  )), name);
+  let disposed = false;
+  return {
+    data,
+    mapPtr,
+    dispose: () => {
+      if (!disposed) {
+        getWasmModule().ccall(freeFunctionName, null, ['number'], [mapPtr]);
+        disposed = true;
+      }
+    },
+  };
+}
+
+function createPreparedStringMap(data: PreparedWasmStringMapData): PreparedWasmStringMap {
+  return createPreparedStringMapWith(data, 'prepareStringMap', 'freePreparedStringMap', 'prepared string map');
+}
+
+function createPreparedNumberTreeMapData(data: NumberMapData): PreparedWasmNumberTreeMapData {
+  if (data.values.length !== data.keys.length) {
+    throw new Error('NumberMapData values length must match keys length');
+  }
+
+  let keysPtr = 0;
+  let valuesPtr = 0;
+
+  try {
+    keysPtr = data.keys.length > 0 ? allocateArrayEx(data.keys) : 0;
+    valuesPtr = data.values.length > 0 ? allocateArrayEx(data.values) : 0;
+  } catch (error) {
+    if (valuesPtr) freeArray(valuesPtr);
+    if (keysPtr) freeArray(keysPtr);
+    throw error;
+  }
+
+  let disposed = false;
+  return {
+    keysPtr,
+    valuesPtr,
+    count: data.keys.length,
+    dispose: () => {
+      if (!disposed) {
+        if (valuesPtr) freeArray(valuesPtr);
+        if (keysPtr) freeArray(keysPtr);
+        disposed = true;
+      }
+    },
+  };
+}
+
+function createPreparedNumberMapWith<T extends { data: PreparedWasmNumberTreeMapData; mapPtr: number; dispose: () => void }>(
+  data: PreparedWasmNumberTreeMapData,
+  prepareFunctionName: string,
+  freeFunctionName: string,
+  name: string
+): T {
+  const mapPtr = assertPointer(toNumber(getWasmModule().ccall(
+    prepareFunctionName,
+    'number',
+    ['number', 'number', 'number'],
+    [data.keysPtr, data.valuesPtr, data.count]
+  )), name);
+  let disposed = false;
+  return {
+    data,
+    mapPtr,
+    dispose: () => {
+      if (!disposed) {
+        getWasmModule().ccall(freeFunctionName, null, ['number'], [mapPtr]);
+        disposed = true;
+      }
+    },
+  } as T;
+}
+
+function createPreparedNumberTreeMap(data: PreparedWasmNumberTreeMapData): PreparedWasmNumberTreeMap {
+  return createPreparedNumberMapWith(data, 'prepareNumberTreeMap', 'freePreparedNumberTreeMap', 'prepared number tree map');
 }
 
 export const wasmAlgorithms = {
@@ -496,6 +718,90 @@ export const wasmAlgorithms = {
     } finally {
       tree.dispose();
     }
+  },
+
+  prepareStringMapData(data: StringMapData): PreparedWasmStringMapData {
+    return createPreparedStringMapData(data);
+  },
+
+  prepareStringMap(data: PreparedWasmStringMapData): PreparedWasmStringMap {
+    return createPreparedStringMap(data);
+  },
+
+  resetStringMap(map: PreparedWasmStringMap): void {
+    const next = createPreparedStringMap(map.data);
+    map.dispose();
+    map.mapPtr = next.mapPtr;
+    map.dispose = next.dispose;
+  },
+
+  insertStringMapEntries(data: PreparedWasmStringMapData): number {
+    return callStringMapData('insertStringMapEntries', data);
+  },
+
+  lookupStringMapEntries(map: PreparedWasmStringMap): number {
+    const result = getWasmModule().ccall(
+      'lookupStringMapEntries',
+      'number',
+      ['number'],
+      [map.mapPtr]
+    );
+    return toNumber(result);
+  },
+
+  deleteStringMapEntries(map: PreparedWasmStringMap): number {
+    const result = getWasmModule().ccall(
+      'deleteStringMapEntries',
+      'number',
+      ['number'],
+      [map.mapPtr]
+    );
+    return toNumber(result);
+  },
+
+  prepareNumberTreeMapData(data: NumberMapData): PreparedWasmNumberTreeMapData {
+    return createPreparedNumberTreeMapData(data);
+  },
+
+  prepareNumberTreeMap(data: PreparedWasmNumberTreeMapData): PreparedWasmNumberTreeMap {
+    return createPreparedNumberTreeMap(data);
+  },
+
+  resetNumberTreeMap(map: PreparedWasmNumberTreeMap): void {
+    const next = createPreparedNumberTreeMap(map.data);
+    map.dispose();
+    map.mapPtr = next.mapPtr;
+    map.dispose = next.dispose;
+  },
+
+  insertNumberTreeMapEntries(data: PreparedWasmNumberTreeMapData): number {
+    const result = getWasmModule().ccall(
+      'insertNumberTreeMapEntries',
+      'number',
+      ['number', 'number', 'number'],
+      [data.keysPtr, data.valuesPtr, data.count]
+    );
+    return toNumber(result);
+  },
+
+  lookupNumberTreeMapEntries(map: PreparedWasmNumberTreeMap): number {
+    const result = getWasmModule().ccall(
+      'lookupNumberTreeMapEntries',
+      'number',
+      ['number'],
+      [map.mapPtr]
+    );
+    return toNumber(result);
+  },
+
+  deleteNumberTreeMapEntries(map: PreparedWasmNumberTreeMap): number {
+    const result = getWasmModule().ccall(
+      'deleteNumberTreeMapEntries',
+      'number',
+      ['number'],
+      [map.mapPtr]
+    );
+    return toNumber(result);
   },
 
   // ========== SIMD OPTIMIZED VERSIONS ==========

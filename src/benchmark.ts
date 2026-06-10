@@ -7,6 +7,10 @@ import * as tsAlgorithms from './ts-algorithms';
 import {
   type PreparedWasmBinaryTree,
   type PreparedWasmNaryTree,
+  type PreparedWasmNumberTreeMap,
+  type PreparedWasmNumberTreeMapData,
+  type PreparedWasmStringMap,
+  type PreparedWasmStringMapData,
   wasmAlgorithms,
 } from './wasm-algorithms';
 
@@ -68,6 +72,7 @@ export function generateRandomVectors(count: number): Float32Array {
 
 const TREE_NODE_COUNT = 1_000_000;
 const NARY_TREE_CHILDREN_PER_NODE = 4;
+const STRING_MAP_ENTRY_COUNT = 100_000;
 
 interface BinaryTreeBenchmarkData {
   values: Uint32Array;
@@ -77,6 +82,24 @@ interface BinaryTreeBenchmarkData {
 interface NaryTreeBenchmarkData {
   tree: tsAlgorithms.NaryTreeData;
   wasmTree: PreparedWasmNaryTree;
+}
+
+interface StringMapBenchmarkData {
+  data: tsAlgorithms.StringMapData;
+  lookupMap: Map<string, number>;
+  deleteMap: Map<string, number>;
+  wasmData: PreparedWasmStringMapData;
+  wasmLookupMap: PreparedWasmStringMap;
+  wasmDeleteMap: PreparedWasmStringMap;
+}
+
+interface NumberTreeMapBenchmarkData {
+  data: tsAlgorithms.NumberMapData;
+  lookupMap: Map<number, number>;
+  deleteMap: Map<number, number>;
+  wasmData: PreparedWasmNumberTreeMapData;
+  wasmLookupMap: PreparedWasmNumberTreeMap;
+  wasmDeleteMap: PreparedWasmNumberTreeMap;
 }
 
 function generateTreeValues(size: number): Uint32Array {
@@ -113,6 +136,57 @@ function cloneNaryTree(tree: tsAlgorithms.NaryTreeData): tsAlgorithms.NaryTreeDa
     values: new Uint32Array(tree.values),
     childOffsets: new Uint32Array(tree.childOffsets),
     children: new Uint32Array(tree.children),
+  };
+}
+
+function generateStringMapData(size: number): tsAlgorithms.StringMapData {
+  const keys: string[] = [];
+  const values = new Uint32Array(size);
+
+  for (let i = 0; i < size; i++) {
+    const suffix = ((i * 2654435761) >>> 0).toString(36);
+    keys.push(`key_${i.toString().padStart(6, '0')}_${suffix}`);
+    values[i] = (i * 17 + 23) % 1000000;
+  }
+
+  return { keys, values };
+}
+
+function generateNumberMapData(size: number): tsAlgorithms.NumberMapData {
+  const keys = new Uint32Array(size);
+  const values = new Uint32Array(size);
+
+  for (let i = 0; i < size; i++) {
+    keys[i] = (i * 2654435761) >>> 0;
+    values[i] = (i * 17 + 23) % 1000000;
+  }
+
+  return { keys, values };
+}
+
+function prepareStringMapBenchmarkData(): StringMapBenchmarkData {
+  const data = generateStringMapData(STRING_MAP_ENTRY_COUNT);
+  const wasmData = wasmAlgorithms.prepareStringMapData(data);
+  return {
+    data,
+    lookupMap: tsAlgorithms.createStringMap(data),
+    deleteMap: tsAlgorithms.createStringMap(data),
+    wasmData,
+    wasmLookupMap: wasmAlgorithms.prepareStringMap(wasmData),
+    wasmDeleteMap: wasmAlgorithms.prepareStringMap(wasmData),
+  };
+}
+
+function prepareNumberTreeMapBenchmarkData(): NumberTreeMapBenchmarkData {
+  const data = generateNumberMapData(STRING_MAP_ENTRY_COUNT);
+  const wasmData = wasmAlgorithms.prepareNumberTreeMapData(data);
+  return {
+    data,
+    lookupMap: tsAlgorithms.createNumberMap(data),
+    deleteMap: tsAlgorithms.createNumberMap(data),
+    wasmData,
+    wasmLookupMap: wasmAlgorithms.prepareNumberTreeMap(wasmData),
+    wasmDeleteMap: wasmAlgorithms.prepareNumberTreeMap(wasmData),
   };
 }
 
@@ -165,7 +239,9 @@ export async function runBenchmark(
   wasmFunc: () => any,
   config: TestConfig,
   tsFuncName?: string,
-  wasmFuncName?: string
+  wasmFuncName?: string,
+  tsSetup?: () => void,
+  wasmSetup?: () => void
 ): Promise<BenchmarkResult> {
   const tsTimes: number[] = [];
   const wasmTimes: number[] = [];
@@ -174,7 +250,9 @@ export async function runBenchmark(
   console.log(`🔥 Warming up ${testName}...`);
   try {
     for (let i = 0; i < config.warmupIterations; i++) {
+      tsSetup?.();
       tsFunc();
+      wasmSetup?.();
       wasmFunc();
     }
   } catch (error) {
@@ -186,6 +264,7 @@ export async function runBenchmark(
   console.log(`📊 Testing TypeScript ${testName}...`);
   try {
     for (let i = 0; i < config.iterations; i++) {
+      tsSetup?.();
       const start = performance.now();
       tsFunc();
       const end = performance.now();
@@ -200,6 +279,7 @@ export async function runBenchmark(
   console.log(`📊 Testing WASM ${testName}...`);
   try {
     for (let i = 0; i < config.iterations; i++) {
+      wasmSetup?.();
       const start = performance.now();
       wasmFunc();
       const end = performance.now();
@@ -251,6 +331,8 @@ export interface BenchmarkTest<TData = any> {
   tsFuncName?: string;
   wasmFuncName?: string;
   prepare: (size: number) => TData;
+  tsSetup?: (data: TData) => void;
+  wasmSetup?: (data: TData) => void;
   tsFunc: (data: TData) => any;
   wasmFunc: (data: TData) => any;
   cleanup?: (data: TData) => void;
@@ -364,6 +446,111 @@ export const benchmarkTests: BenchmarkTest[] = [
     prepare: (size) => generateRandomArray(size),
     tsFunc: (arr) => tsAlgorithms.countGreaterThan(arr, 500000),
     wasmFunc: (arr) => wasmAlgorithms.countGreaterThanSIMD(arr, 500000),
+  },
+
+  // ========== STRING MAP TESTS ==========
+
+  {
+    name: 'String unordered_map Insert',
+    tsFuncName: 'insertStringMapEntries',
+    wasmFuncName: 'insertStringMapEntries',
+    prepare: () => prepareStringMapBenchmarkData(),
+    tsFunc: (data: StringMapBenchmarkData) => tsAlgorithms.insertStringMapEntries(data.data),
+    wasmFunc: (data: StringMapBenchmarkData) => wasmAlgorithms.insertStringMapEntries(data.wasmData),
+    cleanup: (data: StringMapBenchmarkData) => {
+      data.wasmLookupMap.dispose();
+      data.wasmDeleteMap.dispose();
+      data.wasmData.dispose();
+    },
+  },
+  {
+    name: 'String unordered_map Lookup',
+    tsFuncName: 'lookupStringMapEntries',
+    wasmFuncName: 'lookupStringMapEntries',
+    prepare: () => prepareStringMapBenchmarkData(),
+    tsSetup: (data: StringMapBenchmarkData) => {
+      data.lookupMap = tsAlgorithms.createStringMap(data.data);
+    },
+    wasmSetup: (data: StringMapBenchmarkData) => {
+      wasmAlgorithms.resetStringMap(data.wasmLookupMap);
+    },
+    tsFunc: (data: StringMapBenchmarkData) => tsAlgorithms.lookupStringMapEntries(data.data, data.lookupMap),
+    wasmFunc: (data: StringMapBenchmarkData) => wasmAlgorithms.lookupStringMapEntries(data.wasmLookupMap),
+    cleanup: (data: StringMapBenchmarkData) => {
+      data.wasmLookupMap.dispose();
+      data.wasmDeleteMap.dispose();
+      data.wasmData.dispose();
+    },
+  },
+  {
+    name: 'String unordered_map Delete',
+    tsFuncName: 'deleteStringMapEntries',
+    wasmFuncName: 'deleteStringMapEntries',
+    prepare: () => prepareStringMapBenchmarkData(),
+    tsSetup: (data: StringMapBenchmarkData) => {
+      data.deleteMap = tsAlgorithms.createStringMap(data.data);
+    },
+    wasmSetup: (data: StringMapBenchmarkData) => {
+      wasmAlgorithms.resetStringMap(data.wasmDeleteMap);
+    },
+    tsFunc: (data: StringMapBenchmarkData) => tsAlgorithms.deleteStringMapEntries(data.data, data.deleteMap),
+    wasmFunc: (data: StringMapBenchmarkData) => wasmAlgorithms.deleteStringMapEntries(data.wasmDeleteMap),
+    cleanup: (data: StringMapBenchmarkData) => {
+      data.wasmLookupMap.dispose();
+      data.wasmDeleteMap.dispose();
+      data.wasmData.dispose();
+    },
+  },
+  {
+    name: 'Int std::map Insert',
+    tsFuncName: 'insertNumberMapEntries',
+    wasmFuncName: 'insertNumberTreeMapEntries',
+    prepare: () => prepareNumberTreeMapBenchmarkData(),
+    tsFunc: (data: NumberTreeMapBenchmarkData) => tsAlgorithms.insertNumberMapEntries(data.data),
+    wasmFunc: (data: NumberTreeMapBenchmarkData) => wasmAlgorithms.insertNumberTreeMapEntries(data.wasmData),
+    cleanup: (data: NumberTreeMapBenchmarkData) => {
+      data.wasmLookupMap.dispose();
+      data.wasmDeleteMap.dispose();
+      data.wasmData.dispose();
+    },
+  },
+  {
+    name: 'Int std::map Lookup',
+    tsFuncName: 'lookupNumberMapEntries',
+    wasmFuncName: 'lookupNumberTreeMapEntries',
+    prepare: () => prepareNumberTreeMapBenchmarkData(),
+    tsSetup: (data: NumberTreeMapBenchmarkData) => {
+      data.lookupMap = tsAlgorithms.createNumberMap(data.data);
+    },
+    wasmSetup: (data: NumberTreeMapBenchmarkData) => {
+      wasmAlgorithms.resetNumberTreeMap(data.wasmLookupMap);
+    },
+    tsFunc: (data: NumberTreeMapBenchmarkData) => tsAlgorithms.lookupNumberMapEntries(data.data, data.lookupMap),
+    wasmFunc: (data: NumberTreeMapBenchmarkData) => wasmAlgorithms.lookupNumberTreeMapEntries(data.wasmLookupMap),
+    cleanup: (data: NumberTreeMapBenchmarkData) => {
+      data.wasmLookupMap.dispose();
+      data.wasmDeleteMap.dispose();
+      data.wasmData.dispose();
+    },
+  },
+  {
+    name: 'Int std::map Delete',
+    tsFuncName: 'deleteNumberMapEntries',
+    wasmFuncName: 'deleteNumberTreeMapEntries',
+    prepare: () => prepareNumberTreeMapBenchmarkData(),
+    tsSetup: (data: NumberTreeMapBenchmarkData) => {
+      data.deleteMap = tsAlgorithms.createNumberMap(data.data);
+    },
+    wasmSetup: (data: NumberTreeMapBenchmarkData) => {
+      wasmAlgorithms.resetNumberTreeMap(data.wasmDeleteMap);
+    },
+    tsFunc: (data: NumberTreeMapBenchmarkData) => tsAlgorithms.deleteNumberMapEntries(data.data, data.deleteMap),
+    wasmFunc: (data: NumberTreeMapBenchmarkData) => wasmAlgorithms.deleteNumberTreeMapEntries(data.wasmDeleteMap),
+    cleanup: (data: NumberTreeMapBenchmarkData) => {
+      data.wasmLookupMap.dispose();
+      data.wasmDeleteMap.dispose();
+      data.wasmData.dispose();
+    },
   },
 
   // ========== TREE TRAVERSAL TESTS ==========
@@ -497,7 +684,9 @@ export async function runAllBenchmarks(
         () => test.wasmFunc(data),
         config,
         test.tsFuncName,
-        test.wasmFuncName
+        test.wasmFuncName,
+        test.tsSetup ? () => test.tsSetup!(data) : undefined,
+        test.wasmSetup ? () => test.wasmSetup!(data) : undefined
       );
 
       results.push(result);
